@@ -46,8 +46,8 @@ f103radio.bin \
 all: f103radio.elf secondary-outputs
 
 # Tool invocations
-f103radio.elf: $(OBJS) $(USER_OBJS) C:\Users\pawel\STM32CubeIDE\workspace_1.4.0\f103radio\STM32F103C8TX_FLASH.ld
-	arm-none-eabi-gcc -o "f103radio.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\pawel\STM32CubeIDE\workspace_1.4.0\f103radio\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f103radio.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+f103radio.elf: $(OBJS) $(USER_OBJS) E:\GITHUB\rda5807_stm32\f103radio\STM32F103C8TX_FLASH.ld
+	arm-none-eabi-gcc -o "f103radio.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"E:\GITHUB\rda5807_stm32\f103radio\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f103radio.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

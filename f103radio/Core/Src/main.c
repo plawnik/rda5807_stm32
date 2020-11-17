@@ -97,8 +97,15 @@ int main(void)
   uart_dbg_init(&huart1);
   clear_console();
   dbg("Start!\n\r");
-  rda5807_init(&hi2c2)
-;
+  if(rda5807_init(&hi2c2)==RDA5807_NOT_FOUND)
+  {
+	  dbg("RDA5807 module not found!\n\r");
+	  while(1);
+  } else{
+	  dbg("RDA5807 module found!\n\r");
+  }
+
+
 
   uint8_t data[256];
   memset(data,0,256);
@@ -109,6 +116,7 @@ int main(void)
   }
 
 
+  while(1);
   /* USER CODE END 2 */
 
   /* Infinite loop */

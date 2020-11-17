@@ -244,7 +244,7 @@ typedef union
 
 
 
-typedef union
+typedef struct
 {
   rda_reg00 reg00;
   rda_reg01 reg01;
@@ -257,7 +257,7 @@ typedef union
   rda_reg08 reg08;
 } rda5807_config_t;
 
-typedef union
+typedef struct
 {
   rda_reg0a reg0a;
   rda_reg0b reg0b;

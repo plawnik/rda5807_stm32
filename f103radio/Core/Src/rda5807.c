@@ -21,14 +21,13 @@ int8_t rda5807_init(I2C_HandleTypeDef *i2c_h) {
     return RDA5807_NOT_FOUND;
   }
   rdahi2c = *i2c_h;
-  dbg("1 = %x\n\r",rda5807_config.reg00.raw);
-  dbg("2 = %x\n\r",rda5807_config.reg01.raw);
-  dbg("3 = %x\n\r",rda5807_config.reg02.raw);
-  dbg("4 = %x\n\r",rda5807_config.reg03.raw);
-  dbg("5 = %x\n\r",rda5807_config.reg04.raw);
+
+
+
 
   // set init values of registers
   rda5807_config.reg02.refined.MONO = 1;
+  /*
   rda5807_config.reg02.refined.DMUTE = 1;
   rda5807_config.reg02.refined.DHIZ = 1;
   rda5807_config.reg02.refined.ENABLE = 1;
@@ -38,13 +37,28 @@ int8_t rda5807_init(I2C_HandleTypeDef *i2c_h) {
   rda5807_config.reg05.refined.LNA_ICSEL_BIT = 0;
   rda5807_config.reg05.refined.SEEKTH = 8;
   rda5807_config.reg05.refined.VOLUME = 0b1011;
+*/
+
+  dbg("mono %x\n\r",rda5807_config.reg00.refined.DUMMY);
+
+  dbg("r0 = %x\n\r",rda5807_config.reg00.raw);
+  dbg("r1 = %x\n\r",rda5807_config.reg01.raw);
+  dbg("r2 = %x\n\r",rda5807_config.reg02.raw);
+  dbg("r3 = %x\n\r",rda5807_config.reg03.raw);
+  dbg("r4 = %x\n\r",rda5807_config.reg04.raw);
+  dbg("r5 = %x\n\r",rda5807_config.reg05.raw);
+  dbg("r6 = %x\n\r",rda5807_config.reg06.raw);
+  dbg("r7 = %x\n\r",rda5807_config.reg07.raw);
+
+
+
   //rda5807_config.reg00.refined.CHIPID = 0x04;
   // TODO:
   //rda5807_write_register(0x02, rda5807_config.reg02.raw);
   //rda5807_write_register(0x02, rda5807_config.reg05.raw);
 
   rda5807_write_register(0x02, 0b1111000000000001);
-  rda5807_write_register(0x05, 0b0000100010111111);
+  //rda5807_write_register(0x05, 0b0000100010111111);
 
   return RDA5807_OK;
 }
@@ -66,7 +80,14 @@ int8_t rda5807_write_register(uint8_t reg, uint16_t val) {
   data[2] = (uint8_t)val & 0xFF;
 
 
-  dbg("chip id = %x\n\r",rda5807_config.reg00.raw);
+
+
+
+
+
+
+
+
   dbg("sizeof s truct = %d\n\r",sizeof(rda5807_config.reg02));
   dbg("r = %x\n\r", val);
   dbg("1=%x 2=%x=3%x\n\r", data[0],data[1],data[2]);

@@ -273,5 +273,7 @@ typedef struct
 int8_t rda5807_init(I2C_HandleTypeDef *i2c_h);
 int8_t rda5807_check_is_connected(I2C_HandleTypeDef *i2c);
 int8_t rda5807_write_register(uint8_t reg, uint16_t val);
+void rda5807_read_status(void);
+void rda5807_read_status_ex(void);
 
 #endif /* INC_RDA5807_H_ */

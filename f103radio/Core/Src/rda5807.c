@@ -13,44 +13,61 @@ I2C_HandleTypeDef rdahi2c;
 rda5807_config_t rda5807_config;
 rda5807_status_t rda5807_status;
 
+extern I2C_HandleTypeDef hi2c2; //TODO: wyjebac
+
 uint16_t frequency;
 uint16_t band;
 uint8_t spacing = SPACING_100KHZ;
 uint8_t volume;
 
+
+
+// TODO: add defines for all initial values
+// ex: #define DEFAULT_SEEKTH 0b1000
 int8_t rda5807_init(I2C_HandleTypeDef *i2c_h) {
   // check is RDA I2C working
   if (rda5807_check_is_connected(i2c_h) == RDA5807_NOT_FOUND) {
     return RDA5807_NOT_FOUND;
   }
   rdahi2c = *i2c_h;
+  // software reset chip
+  rda5807_write_register(0x02, 2);
+  HAL_Delay(100);// datasheet say nothing about power up time
 
   // set init values of registers
-  rda5807_config.reg02.refined.DMUTE = 1;
+  // register 0x02
   rda5807_config.reg02.refined.DHIZ = 1;
+  rda5807_config.reg02.refined.DMUTE = 1;
   rda5807_config.reg02.refined.ENABLE = 1;
-  rda5807_config.reg02.refined.BASS = 1;
-  rda5807_config.reg02.refined.SEEK = 1;
-  //rda5807_config.reg02.refined.RDS_EN = 1;
-  rda5807_config.reg02.refined.NEW_METHOD = 1;
+  rda5807_config.reg02.refined.BASS = 1;  // TODO: read from eeprom
+  rda5807_config.reg02.refined.NEW_METHOD = 1; //TODO: read from eeprom
+  rda5807_config.reg02.refined.RDS_EN = 1;
+  // TODO: MONO mode read from eeprom
 
-  rda5807_config.reg04.refined.RDS_FIFO_CLR = 1;
+  // register 0x03
+  //TODO: read spacing from eeprom
+  //TODO: set last frequency from eeprom
 
-  rda5807_config.reg05.refined.INT_MODE = 0;
-  rda5807_config.reg05.refined.LNA_PORT_SEL = 2;
-  rda5807_config.reg05.refined.LNA_ICSEL_BIT = 0;
-  rda5807_config.reg05.refined.SEEKTH = 8;
-  rda5807_config.reg05.refined.VOLUME = 0b1111;
+  // register 0x04
+  // TODO: read de-emphasis mode from eeprom
 
-  rda5807_config.reg03.refined.SPACE = 0;
+  // register 0x05
+  rda5807_config.reg05.refined.INT_MODE = 1;
+  rda5807_config.reg05.refined.SEEKTH = 8; //TODO: read from eeprom
+  rda5807_config.reg05.refined.LNA_PORT_SEL = 2; //TODO: read from eeprom
+  //TODO: add LNA_ICSEL set from eeprom
+  rda5807_config.reg05.refined.VOLUME = 15; //TODO: add read last volume from eeprom
 
-  // TODO:
-  //rda5807_write_register(0x02, 2); // software reset chip;
+  // register 0x07
+  rda5807_config.reg07.refined.TH_SOFRBLEND = 16;
+  rda5807_config.reg07.refined.SOFTBLEND_EN = 1;
 
+
+  // wtite registers values
   rda5807_write_register(0x02, rda5807_config.reg02.raw);
-  rda5807_write_register(0x03, rda5807_config.reg03.raw);
   rda5807_write_register(0x05, rda5807_config.reg05.raw);
-  rda5807_write_register(0x02, rda5807_config.reg02.raw);
+
+
 
   HAL_Delay(500);
 
@@ -78,7 +95,7 @@ int8_t rda5807_write_register(uint8_t reg, uint16_t val) {
 
   // send data to rda5807
   HAL_StatusTypeDef err;
-  err = HAL_I2C_Master_Transmit(&rdahi2c, 0x11 << 1, data, 3, 3000);
+  err = HAL_I2C_Master_Transmit(&hi2c2, 0x11 << 1, data, 3, 3000); //TODO: change to rdahic
   if (err != HAL_OK)
     return RDA5807_WRITE_ERROR;
   return RDA5807_OK;
@@ -101,8 +118,7 @@ void rda5807_read_status(void) {
 void rda5807_read_status_ex(void) {
   uint8_t data[256];
   memset(data, 0, 256);
-  //int error = HAL_I2C_Master_Receive(&hi2c2, 0x11<<1, data,64, 10);
-  HAL_I2C_Mem_Read(&rdahi2c, 0x11 << 1, 0, 2, data, 32, 1000);
+  HAL_I2C_Mem_Read(&hi2c2, 0x11 << 1, 0, 2, data, 32, 1000);
 
   for (int i = 0; i < 16; i++) {
     dbg("reg %d = %x\n\r", i, ((data[i * 2] << 8) + data[i * 2 + 1]));

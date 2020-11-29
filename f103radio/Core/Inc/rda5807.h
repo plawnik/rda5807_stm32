@@ -29,6 +29,9 @@ enum {
   BAND_US_EUROPE = 0, BAND_JAPAN = 1, BAND_WORLD_WIDE = 2, BAND_EAST_EUROPE = 3
 };
 
+enum { MONO = 0, STEREO = 1};
+
+
 // 0x00
 typedef union {
   struct {
@@ -146,7 +149,7 @@ typedef union {
     uint8_t SOFTBLEND_EN :1; //!< If 1, Softblend enable
     uint8_t SEEK_TH_OLD :6; //!< Seek threshold for old seek mode, Valid when Seek_Mode=001
     uint8_t RSVD1 :1;
-    uint8_t MODE_50_60 :1;   //!< 1 = 65~76 MHz;  0 = 50~76MHz
+    uint8_t MODE_50_65 :1;   //!< 1 = 65~76 MHz;  0 = 50~76MHz
     uint8_t TH_SOFRBLEND :5; //!< Threshold for noise soft blend setting, unit 2dB (default 0b10000).
     uint8_t RSVD2 :1;
   } refined;
@@ -258,6 +261,8 @@ void rda5807_read_status(void);
 void rda5807_read_status_ex(void);
 
 int rda5807_get_frequency(void);
+void rda5807_set_frequency(int freq);
 int rda5807_get_rssi(void);
+int rda5807_get_stereo(void);
 
 #endif /* INC_RDA5807_H_ */

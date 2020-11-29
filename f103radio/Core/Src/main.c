@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -48,6 +49,7 @@
 
 /* USER CODE BEGIN PV */
 lcd_t lcd;
+extern rda5807_status_t rda5807_status; //TODO: wyjebac
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,14 +94,16 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   MX_I2C1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
   uart_dbg_init(&huart1);
   clear_console();
   dbg("Start!\n\r");
 
 
   lcd_init(&lcd, LCD_I2C_ADDRESS << 1, LCD_I2C_HANDLER);
-  lcd_string(&lcd, "RADIO 65-108MHz");
+  lcd_string(&lcd, "RADIO 50-115MHz");
   lcd_pos(&lcd, 0, 1);
   lcd_string(&lcd, "INICJALIZACJA");
 
@@ -110,14 +114,10 @@ int main(void)
   } else {
     dbg("RDA5807 module found!\n\r");
   }
-
-  //rda5807_read_status_ex();
-  HAL_Delay(3000);
-  rda5807_read_status();
-
-  dbg("freq = %d", rda5807_get_frequency());
-
   lcd_clear(&lcd);
+
+  int globalfreq = 106100;
+  rda5807_set_frequency(globalfreq);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,10 +126,37 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(1000);
+
+
     rda5807_read_status();
-    dbg("RSSI = %d\n\r", rda5807_get_rssi());
-    dbg("FREQ = %d\n\r", rda5807_get_frequency());
+    int rssi = rda5807_get_rssi();
+    int freq = rda5807_get_frequency();
+    // print freq
+    lcd_pos(&lcd, 0,0);
+    char buff[50];
+    sprintf(buff,"FREQ= %d.%dMHz",freq/1000000,((freq-(((freq/1000000)*1000000)))/1000));
+    lcd_string(&lcd, buff);
+    //print rssi
+    lcd_pos(&lcd, 0,1);
+    sprintf(buff,"RSSI= %ddB",rssi);
+    lcd_string(&lcd, buff);
+    // debug uart
+    dbg("FREQ = %d\n\r",freq);
+    dbg("RSSI = %d\n\r",rssi);
+    if(rda5807_get_stereo()==STEREO){
+      lcd_pos(&lcd, 14, 1);
+      lcd_string(&lcd, "S");
+    } else{
+      lcd_pos(&lcd, 14, 1);
+      lcd_string(&lcd, "M");
+    }
+    dbg("enc %d\n\r",(int16_t)htim2.Instance->CNT/4);
+    if(((int16_t)htim2.Instance->CNT/4)!=0){
+      globalfreq +=(100*(int16_t)htim2.Instance->CNT/4);
+      rda5807_set_frequency(globalfreq);
+      htim2.Instance->CNT=0;
+    }
+   //HAL_Delay(1000);
 
   }
   /* USER CODE END 3 */

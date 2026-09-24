@@ -1,0 +1,75 @@
+name: Firmware
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install ARM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            gcc-arm-none-eabi libnewlib-arm-none-eabi zip
+
+      - name: Run host tests
+        run: make test
+
+      - name: Build firmware
+        run: make firmware
+
+      - name: Package firmware
+        run: scripts/package_release.sh "${GITHUB_SHA::8}" release
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: rda5807-stm32-${{ github.sha }}
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Prepare release notes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          cat > release/RELEASE_NOTES.md <<EOF
+          Automatyczny build firmware #${GITHUB_RUN_NUMBER}.
+
+          Commit: ${GITHUB_SHA}
+
+          Paczka ZIP zawiera BIN, HEX, ELF, mapę linkera, instrukcję wgrywania i sumy SHA-256.
+          Poprzednie automatyczne wydanie zostało zastąpione tym buildem.
+          EOF
+
+      - name: Replace latest release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete firmware-latest --cleanup-tag --yes || true
+          archive="$(find release -maxdepth 1 -name 'rda5807_stm32-*.zip' -print -quit)"
+          gh release create firmware-latest \
+            "${archive}" release/SHA256SUMS.txt \
+            --target "${GITHUB_SHA}" \
+            --title "Firmware build #${GITHUB_RUN_NUMBER}" \
+            --notes-file release/RELEASE_NOTES.md \
+            --latest

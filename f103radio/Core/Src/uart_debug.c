@@ -1,53 +1,33 @@
-/*
- * uart_debug.c
- *
- *  Created on: 31.10.2018
- *      Author: Win7
- */
-
 #include "uart_debug.h"
-#include "main.h"
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-UART_HandleTypeDef dbg_uart_handler;
+static UART_HandleTypeDef *debug_uart;
 
-void uart_dbg_init(UART_HandleTypeDef* uart_handler){
-	dbg_uart_handler = *uart_handler;
-	clear_console();
-	hide_cursor_console();
+void uart_debug_init(UART_HandleTypeDef *uart) {
+  debug_uart = uart;
 }
 
-
-void vprint(const char *fmt, va_list argp)
-{
-    char string[100];
-    if(0 < vsprintf(string,fmt,argp)) // build string
-    {
-        HAL_UART_Transmit(&dbg_uart_handler, (uint8_t*)string, strlen(string),10); // send message via UART
-    }
+void uart_debug_write_n(const char *data, size_t length) {
+  if (debug_uart == NULL || data == NULL || length == 0U) return;
+  HAL_UART_Transmit(debug_uart, (uint8_t *)data, (uint16_t)length, 250U);
 }
 
-void dbg(const char *fmt, ...) // custom printf() function
-{
-    va_list argp;
-    va_start(argp, fmt);
-    vprint(fmt, argp);
-    va_end(argp);
+void uart_debug_write(const char *text) {
+  if (text != NULL) uart_debug_write_n(text, strlen(text));
 }
 
-void clear_console(void){
-  dbg("\033[2J\033[H");// clear console window
-}
-
-
-void home_console(void){
-  dbg("\033[H");// clear console window
-}
-
-void hide_cursor_console(void){
-	dbg("\e[?25l");
-}
-
-void show_cursor_console(void){
-	dbg("\e[?25h");
+void uart_debug_printf(const char *format, ...) {
+  char buffer[256];
+  va_list arguments;
+  int length;
+  if (format == NULL) return;
+  va_start(arguments, format);
+  length = vsnprintf(buffer, sizeof(buffer), format, arguments);
+  va_end(arguments);
+  if (length <= 0) return;
+  if ((size_t)length >= sizeof(buffer)) length = (int)sizeof(buffer) - 1;
+  uart_debug_write_n(buffer, (size_t)length);
 }

@@ -1,0 +1,120 @@
+#include "app_config.h"
+
+#include <string.h>
+
+void radio_settings_defaults(radio_settings_t *settings) {
+  if (settings == NULL) {
+    return;
+  }
+
+  memset(settings, 0, sizeof(*settings));
+  settings->frequency_khz = 106100U;
+  settings->volume = 8U;
+  settings->band = RADIO_BAND_EU_US;
+  settings->spacing = RADIO_SPACING_100_KHZ;
+  settings->seek_threshold = 8U;
+  settings->old_seek_threshold = 16U;
+  settings->softblend_threshold = 16U;
+  settings->seek_mode = RADIO_SEEK_SNR;
+  settings->lna_port = 2U; /* LNAP, recommended for a single-ended input. */
+  settings->lna_current = 0U;
+  settings->lcd_contrast = 56U;
+  settings->lcd_bias = 4U;
+  settings->rds_enabled = true;
+  settings->deemphasis_50us = true;
+  settings->softmute_enabled = true;
+  settings->softblend_enabled = true;
+  settings->afc_enabled = true;
+  settings->new_method_enabled = true;
+  settings->east_band_starts_at_65mhz = true;
+  settings->lcd_backlight = true;
+}
+
+uint32_t radio_band_min_khz(const radio_settings_t *settings) {
+  switch ((radio_band_t)settings->band) {
+    case RADIO_BAND_JAPAN:
+    case RADIO_BAND_WORLD:
+      return 76000U;
+    case RADIO_BAND_EAST:
+      return settings->east_band_starts_at_65mhz ? 65000U : 50000U;
+    case RADIO_BAND_EU_US:
+    default:
+      return 87000U;
+  }
+}
+
+uint32_t radio_band_max_khz(const radio_settings_t *settings) {
+  switch ((radio_band_t)settings->band) {
+    case RADIO_BAND_JAPAN:
+      return 91000U;
+    case RADIO_BAND_EAST:
+      return 76000U;
+    case RADIO_BAND_WORLD:
+    case RADIO_BAND_EU_US:
+    default:
+      return 108000U;
+  }
+}
+
+uint16_t radio_spacing_khz(const radio_settings_t *settings) {
+  static const uint16_t spacing[] = {100U, 200U, 50U, 25U};
+  return spacing[settings->spacing & 0x03U];
+}
+
+uint32_t radio_frequency_clamp(const radio_settings_t *settings,
+                               int32_t frequency_khz) {
+  const uint32_t low = radio_band_min_khz(settings);
+  const uint32_t high = radio_band_max_khz(settings);
+  const uint32_t step = radio_spacing_khz(settings);
+  uint32_t result;
+
+  if (frequency_khz <= (int32_t)low) {
+    return low;
+  }
+  if (frequency_khz >= (int32_t)high) {
+    return high;
+  }
+
+  result = (uint32_t)frequency_khz;
+  result = low + (((result - low) + (step / 2U)) / step) * step;
+  return result > high ? high : result;
+}
+
+uint32_t radio_frequency_step(const radio_settings_t *settings,
+                              uint32_t frequency_khz, int32_t delta_khz) {
+  int32_t next = (int32_t)frequency_khz + delta_khz;
+  const int32_t low = (int32_t)radio_band_min_khz(settings);
+  const int32_t high = (int32_t)radio_band_max_khz(settings);
+
+  if (next > high) {
+    next = settings->seek_stop_at_band ? high : low;
+  } else if (next < low) {
+    next = settings->seek_stop_at_band ? low : high;
+  }
+  return radio_frequency_clamp(settings, next);
+}
+
+void radio_settings_sanitize(radio_settings_t *settings) {
+  if (settings == NULL) {
+    return;
+  }
+
+  if (settings->band > RADIO_BAND_EAST) {
+    settings->band = RADIO_BAND_EU_US;
+  }
+  settings->spacing &= 0x03U;
+  if (settings->seek_mode != RADIO_SEEK_RSSI) {
+    settings->seek_mode = RADIO_SEEK_SNR;
+  }
+  if (settings->volume > 15U) settings->volume = 15U;
+  if (settings->seek_threshold > 15U) settings->seek_threshold = 15U;
+  if (settings->old_seek_threshold > 63U) settings->old_seek_threshold = 63U;
+  if (settings->softblend_threshold > 31U) settings->softblend_threshold = 31U;
+  if (settings->lna_port > 3U) settings->lna_port = 2U;
+  if (settings->lna_current > 3U) settings->lna_current = 0U;
+  if (settings->lcd_contrast > 127U) settings->lcd_contrast = 127U;
+  if (settings->lcd_contrast < 20U) settings->lcd_contrast = 20U;
+  if (settings->lcd_bias > 7U) settings->lcd_bias = 4U;
+  settings->frequency_khz = radio_frequency_clamp(
+      settings, (int32_t)settings->frequency_khz);
+}

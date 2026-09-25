@@ -105,25 +105,27 @@ void radio_app_set_frequency(radio_app_t *app, uint32_t frequency_khz,
 
 void radio_app_step_frequency(radio_app_t *app, int16_t detents,
                               uint32_t now_ms) {
-  bool spacing_changed;
   if (app == NULL || detents == 0) return;
-  /* The physical knob always uses the requested 0.1 MHz step. */
-  spacing_changed = app->settings.spacing != RADIO_SPACING_100_KHZ;
-  app->settings.spacing = RADIO_SPACING_100_KHZ;
-  const uint32_t next = radio_frequency_step(
-      &app->settings, app->settings.frequency_khz, (int32_t)detents * 100);
-  if (next == app->settings.frequency_khz && spacing_changed) {
-    changed(app, now_ms, true, true);
-    return;
-  }
   radio_app_set_frequency(
-      app, next, now_ms);
+      app,
+      radio_frequency_step_channels(&app->settings,
+                                    app->settings.frequency_khz, detents),
+      now_ms);
 }
 
 void radio_app_toggle_mute(radio_app_t *app, uint32_t now_ms) {
   if (app == NULL) return;
   app->settings.muted = !app->settings.muted;
   changed(app, now_ms, false, true);
+}
+
+void radio_app_seek(radio_app_t *app, bool upwards, uint32_t now_ms) {
+  if (app == NULL || !app->radio_available) return;
+  rds_decoder_reset_station(&app->rds);
+  app->radio.status.seek_failed = false;
+  rda5807_seek(&app->radio, &app->settings, upwards);
+  app->last_change_ms = now_ms;
+  ++app->revision;
 }
 
 const char *radio_app_menu_label(radio_menu_item_t item) {
@@ -151,9 +153,9 @@ void radio_app_menu_value(const radio_app_t *app, radio_menu_item_t item,
   buffer[0] = '\0';
   switch (item) {
     case RADIO_MENU_FREQUENCY:
-      snprintf(buffer, buffer_size, "%lu.%01lu MHz",
+      snprintf(buffer, buffer_size, "%lu.%03lu MHz",
                (unsigned long)(s->frequency_khz / 1000U),
-               (unsigned long)((s->frequency_khz % 1000U) / 100U)); break;
+               (unsigned long)(s->frequency_khz % 1000U)); break;
     case RADIO_MENU_VOLUME: snprintf(buffer, buffer_size, "%u / 15", s->volume); break;
     case RADIO_MENU_MUTE: snprintf(buffer, buffer_size, "%s", s->muted ? "TAK" : "NIE"); break;
     case RADIO_MENU_AUDIO_MODE: snprintf(buffer, buffer_size, "%s", s->force_mono ? "MONO" : "AUTO STEREO"); break;
@@ -234,12 +236,7 @@ void radio_app_menu_activate(radio_app_t *app, radio_menu_item_t item,
                              uint32_t now_ms) {
   if (app == NULL) return;
   if (item == RADIO_MENU_SEEK_UP || item == RADIO_MENU_SEEK_DOWN) {
-    if (app->radio_available) {
-      rds_decoder_reset_station(&app->rds);
-      rda5807_seek(&app->radio, &app->settings,
-                   item == RADIO_MENU_SEEK_UP);
-      ++app->revision;
-    }
+    radio_app_seek(app, item == RADIO_MENU_SEEK_UP, now_ms);
   } else if (item == RADIO_MENU_DEFAULTS) {
     radio_settings_defaults(&app->settings);
     rds_decoder_reset_station(&app->rds);

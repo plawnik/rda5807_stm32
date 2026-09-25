@@ -64,6 +64,7 @@ void radio_app_step_frequency(radio_app_t *app, int16_t detents,
 void radio_app_set_frequency(radio_app_t *app, uint32_t frequency_khz,
                              uint32_t now_ms);
 void radio_app_toggle_mute(radio_app_t *app, uint32_t now_ms);
+void radio_app_seek(radio_app_t *app, bool upwards, uint32_t now_ms);
 
 const char *radio_app_menu_label(radio_menu_item_t item);
 void radio_app_menu_value(const radio_app_t *app, radio_menu_item_t item,

@@ -62,5 +62,8 @@ uint32_t radio_frequency_clamp(const radio_settings_t *settings,
                                int32_t frequency_khz);
 uint32_t radio_frequency_step(const radio_settings_t *settings,
                               uint32_t frequency_khz, int32_t delta_khz);
+uint32_t radio_frequency_step_channels(const radio_settings_t *settings,
+                                       uint32_t frequency_khz,
+                                       int32_t channel_delta);
 
 #endif /* APP_CONFIG_H */

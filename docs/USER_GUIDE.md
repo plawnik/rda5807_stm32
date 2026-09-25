@@ -13,7 +13,7 @@ Na ekranie `BRAK RADIA` oznacza problem z komunikacją I²C. Najpierw sprawdź z
 
 ## Ekran główny
 
-- Obrót w lewo/prawo przestraja radio co 100 kHz. Ręczne strojenie enkoderem ustawia siatkę kanałową na 100 kHz, nawet jeśli wcześniej wybrano inny krok dla wyszukiwania.
+- Obrót w lewo/prawo przestraja radio o aktualnie wybrany krok kanału: 25, 50, 100 albo 200 kHz.
 - Krótki klik otwiera menu.
 - Przytrzymanie przez około 0,75 s przełącza wyciszenie.
 - Symbol `>` w prawym górnym rogu oznacza aktywne strojenie lub wyszukiwanie.
@@ -29,7 +29,7 @@ Wybrana pozycja jest odwrócona. Jeżeli jej nazwa i wartość nie mieszczą si�
 
 ## Terminal
 
-Parametry portu: `115200 bit/s`, 8 bitów danych, brak parzystości, 1 bit stopu, brak kontroli przepływu. Terminal powinien obsługiwać ANSI/VT100 oraz UTF-8.
+Parametry portu: `115200 bit/s`, 8 bitów danych, brak parzystości, 1 bit stopu, brak kontroli przepływu. Terminal powinien obsługiwać ANSI/VT100 oraz UTF-8. Zalecany rozmiar okna to co najmniej 112 kolumn i 35 wierszy.
 
 Przykładowe uruchomienie w Linuksie:
 
@@ -39,16 +39,22 @@ picocom -b 115200 /dev/ttyUSB0
 minicom -D /dev/ttyUSB0 -b 115200
 ```
 
-W normalnym trybie `↑`/`↓` wybiera pole, a `Enter` rozpoczyna edycję. W edycji większości pól każda ze strzałek zmienia wartość: góra/prawo zwiększa, dół/lewo zmniejsza.
+Górna część panelu zawiera duży odczyt częstotliwości, boczne pionowe wskaźniki głośności i sygnału oraz ikonki stanu. Dolna część pokazuje listę konfiguracji. Terminal aktualizuje kursorem VT100 wyłącznie zmienione wiersze, dlatego normalna praca nie czyści ekranu i nie powoduje migania.
+
+Klawisz `E` uruchamia edycję częstotliwości. Klawisz `O` aktywuje dolną listę; wtedy `↑`/`↓` wybiera pole, a `Enter` rozpoczyna edycję. W edycji większości pól góra/prawo zwiększa, a dół/lewo zmniejsza wartość. `Esc` wraca o jeden poziom.
 
 Dla częstotliwości:
 
 - `←`/`→` wybiera jedną z sześciu cyfr wartości w kHz;
-- `↑`/`↓` zwiększa lub zmniejsza zaznaczoną pozycję dziesiętną;
+- `↑`/`↓` zwiększa lub zmniejsza zaznaczoną cyfrę;
 - klawisz `0…9` zastępuje wybraną cyfrę i przesuwa kursor dalej;
 - wartość jest natychmiast ograniczana do aktualnego pasma i siatki kanałowej.
 
-`Esc` i `Enter` kończą edycję. Klawisz `M` działa jako globalne mute, a `R` wymusza pełne odświeżenie. Działają też zamienniki `WASD` i `HJKL`.
+Odczyt ma zawsze trzy miejsca po przecinku, na przykład `87.500 MHz` albo `108.000 MHz`. Po 5 sekundach bez wejścia tryb edycji wyłącza się automatycznie.
+
+`P` lub `[` uruchamia seek w dół, a `N` lub `]` seek w górę. Klawisz `M` działa jako globalne mute, a `R` wymusza pełne odświeżenie. Działają też zamienniki `WASD` i `HJKL`.
+
+Po zmianie pasma częstotliwość jest natychmiast ograniczana do nowego zakresu. Przykładowo `108.000 MHz` zmieni się na `91.000 MHz` po wybraniu pasma `76–91 MHz`. Zmiana dolnej granicy pasma wschodniego z 50 na 65 MHz działa w ten sam sposób. Zmiana kroku kanału wyrównuje bieżącą częstotliwość do nowej siatki, a enkoder od tej chwili używa właśnie tego kroku.
 
 ## RDS
 

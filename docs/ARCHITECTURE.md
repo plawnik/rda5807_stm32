@@ -24,7 +24,7 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 | `input` | TIM2 jako enkoder i debouncing przycisku |
 | `radio_app` | stan aplikacji, menu i synchronizacja sprzętu |
 | `lcd_ui` | ekran główny, ikony, menu i przewijanie tekstu |
-| `terminal_ui` | parser VT100, bufor UART i kolorowy panel |
+| `terminal_ui` | parser VT100, bufor UART, duże cyfry i różnicowe odświeżanie wierszy |
 | `settings_store` | dwie strony Flash, sekwencja rekordu i CRC32 |
 | `uart_debug` | ograniczone długością, bezpieczne formatowanie wyjścia |
 
@@ -36,6 +36,10 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 - odpowiednie rejestry RDA są aktualizowane;
 - widoki dostają nowy numer rewizji;
 - konfiguracja zostaje oznaczona jako oczekująca na zapis.
+
+Zmiana pasma, dolnej granicy albo kroku przechodzi przez tę samą sanityzację przed zapisem rejestrów. Dzięki temu częstotliwość widoczna w aplikacji jest już ograniczona do nowego zakresu i wyrównana do podstawy oraz kroku kanału, zanim zostanie wyliczony numer kanału RDA5807M.
+
+Panel terminala buduje każdy z 35 wierszy niezależnie i przechowuje 32-bitowy skrót ostatnio wysłanej wersji. W zwykłej pracy wysyłane są wyłącznie zmienione wiersze wraz z sekwencją pozycjonowania kursora. Pełne czyszczenie bufora terminala jest wykonywane tylko przy inicjalizacji albo na żądanie użytkownika.
 
 ## Układ pamięci Flash
 
@@ -49,4 +53,4 @@ Skrypt linkera ogranicza region `FLASH` do 62 KiB. Rekord zawiera magic, wersję
 
 ## Testowalność
 
-`app_config` i `rds_decoder` nie zależą od STM32 HAL. `make test` kompiluje je natywnym GCC i sprawdza zakresy częstotliwości, zawijanie pasma, PS, RadioText, flagę A/B i czas RDS. `make firmware` osobno buduje cały obraz dla Cortex-M3.
+`app_config` i `rds_decoder` nie zależą od STM32 HAL. `make test` kompiluje je natywnym GCC i sprawdza zakresy częstotliwości, kroki 25/50/100/200 kHz, zmianę pasma, PS, RadioText, flagę A/B i czas RDS. Osobny test panelu terminalowego korzysta z atrap UART i potwierdza, że niezmieniony ekran nie generuje transmisji, zmiana RSSI aktualizuje tylko część wierszy, a pełne odrysowanie następuje wyłącznie na żądanie. `make firmware` osobno buduje cały obraz dla Cortex-M3.

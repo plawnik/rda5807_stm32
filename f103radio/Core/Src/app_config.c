@@ -82,16 +82,30 @@ uint32_t radio_frequency_clamp(const radio_settings_t *settings,
 
 uint32_t radio_frequency_step(const radio_settings_t *settings,
                               uint32_t frequency_khz, int32_t delta_khz) {
-  int32_t next = (int32_t)frequency_khz + delta_khz;
-  const int32_t low = (int32_t)radio_band_min_khz(settings);
-  const int32_t high = (int32_t)radio_band_max_khz(settings);
+  int64_t next = (int64_t)frequency_khz + delta_khz;
+  const int64_t low = radio_band_min_khz(settings);
+  const int64_t high = radio_band_max_khz(settings);
 
   if (next > high) {
     next = settings->seek_stop_at_band ? high : low;
   } else if (next < low) {
     next = settings->seek_stop_at_band ? low : high;
   }
-  return radio_frequency_clamp(settings, next);
+  return radio_frequency_clamp(settings, (int32_t)next);
+}
+
+uint32_t radio_frequency_step_channels(const radio_settings_t *settings,
+                                       uint32_t frequency_khz,
+                                       int32_t channel_delta) {
+  const int64_t delta_khz =
+      (int64_t)channel_delta * radio_spacing_khz(settings);
+  if (delta_khz > INT32_MAX) {
+    return radio_frequency_step(settings, frequency_khz, INT32_MAX);
+  }
+  if (delta_khz < INT32_MIN) {
+    return radio_frequency_step(settings, frequency_khz, INT32_MIN);
+  }
+  return radio_frequency_step(settings, frequency_khz, (int32_t)delta_khz);
 }
 
 void radio_settings_sanitize(radio_settings_t *settings) {

@@ -6,6 +6,27 @@
 #define LCD_RENDER_INTERVAL_MS 100U
 #define LCD_SCROLL_INTERVAL_MS 300U
 
+static const uint8_t compact_digits[10][5] = {
+    {0x07U, 0x05U, 0x05U, 0x05U, 0x07U},
+    {0x02U, 0x06U, 0x02U, 0x02U, 0x07U},
+    {0x07U, 0x01U, 0x07U, 0x04U, 0x07U},
+    {0x07U, 0x01U, 0x07U, 0x01U, 0x07U},
+    {0x05U, 0x05U, 0x07U, 0x01U, 0x01U},
+    {0x07U, 0x04U, 0x07U, 0x01U, 0x07U},
+    {0x07U, 0x04U, 0x07U, 0x05U, 0x07U},
+    {0x07U, 0x01U, 0x01U, 0x01U, 0x01U},
+    {0x07U, 0x05U, 0x07U, 0x05U, 0x07U},
+    {0x07U, 0x05U, 0x07U, 0x01U, 0x07U}};
+
+static void frequency_digits(uint32_t frequency_khz, char digits[7]) {
+  if (frequency_khz > 999999U) frequency_khz = 999999U;
+  for (int8_t index = 5; index >= 0; --index) {
+    digits[index] = (char)('0' + (frequency_khz % 10U));
+    frequency_khz /= 10U;
+  }
+  digits[6] = '\0';
+}
+
 static size_t visible_length(const char *text, size_t maximum) {
   size_t length = strnlen(text, maximum);
   while (length > 0U && text[length - 1U] == ' ') --length;
@@ -72,6 +93,34 @@ static void draw_volume_icon(pcd8544_t *lcd, int16_t x, int16_t y,
   }
 }
 
+static void draw_compact_frequency(pcd8544_t *lcd, uint32_t frequency_khz) {
+  char digits[7];
+  int16_t x = 10;
+  const int16_t y = 10;
+  frequency_digits(frequency_khz, digits);
+  for (uint8_t index = 0U; index < 6U; ++index) {
+    const uint8_t glyph = (uint8_t)(digits[index] - '0');
+    const bool leading_blank = index == 0U && digits[index] == '0';
+    if (!leading_blank) {
+      for (uint8_t row = 0U; row < 5U; ++row) {
+        for (uint8_t column = 0U; column < 3U; ++column) {
+          if ((compact_digits[glyph][row] &
+               (1U << (2U - column))) != 0U) {
+            pcd8544_fill_rect(lcd, (int16_t)(x + column * 2),
+                              (int16_t)(y + row * 2), 2, 2, true);
+          }
+        }
+      }
+    }
+    x = (int16_t)(x + 7);
+    if (index == 2U) {
+      pcd8544_fill_rect(lcd, x, (int16_t)(y + 8), 2, 2, true);
+      x = (int16_t)(x + 3);
+    }
+  }
+  pcd8544_text(lcd, (int16_t)(x + 1), (int16_t)(y + 2), "MHz", 1U, true);
+}
+
 static void draw_menu_icon(pcd8544_t *lcd, radio_menu_item_t item,
                            int16_t y) {
   const int16_t cy = (int16_t)(y + 3);
@@ -123,11 +172,7 @@ static void render_home(lcd_ui_t *ui, const radio_app_t *app,
     pcd8544_text(ui->lcd, 78, 0, ">", 1U, true);
   }
 
-  snprintf(line, sizeof(line), "%lu.%01lu",
-           (unsigned long)(app->settings.frequency_khz / 1000U),
-           (unsigned long)((app->settings.frequency_khz % 1000U) / 100U));
-  x = (int16_t)((PCD8544_WIDTH - strlen(line) * 12U) / 2U);
-  pcd8544_text(ui->lcd, x, 9, line, 2U, true);
+  draw_compact_frequency(ui->lcd, app->settings.frequency_khz);
 
   draw_volume_icon(ui->lcd, 1, 26, app->settings.volume,
                    app->settings.muted);

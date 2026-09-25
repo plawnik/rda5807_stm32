@@ -21,6 +21,31 @@ static void test_frequency_rules(void) {
   settings.seek_stop_at_band = true;
   assert(radio_frequency_step(&settings, 108000U, 100) == 108000U);
 
+  settings.seek_stop_at_band = false;
+  settings.spacing = RADIO_SPACING_50_KHZ;
+  settings.frequency_khz = 106100U;
+  assert(radio_frequency_step_channels(
+             &settings, settings.frequency_khz, 1) == 106150U);
+  assert(radio_frequency_step_channels(
+             &settings, 106150U, -1) == 106100U);
+  settings.frequency_khz = 106125U;
+  radio_settings_sanitize(&settings);
+  assert(settings.frequency_khz == 106150U);
+
+  settings.band = RADIO_BAND_JAPAN;
+  settings.frequency_khz = 108000U;
+  radio_settings_sanitize(&settings);
+  assert(settings.frequency_khz == 91000U);
+
+  settings.band = RADIO_BAND_EAST;
+  settings.east_band_starts_at_65mhz = false;
+  settings.frequency_khz = 60000U;
+  radio_settings_sanitize(&settings);
+  assert(settings.frequency_khz == 60000U);
+  settings.east_band_starts_at_65mhz = true;
+  radio_settings_sanitize(&settings);
+  assert(settings.frequency_khz == 65000U);
+
   settings.band = RADIO_BAND_EAST;
   settings.east_band_starts_at_65mhz = false;
   settings.frequency_khz = 10U;

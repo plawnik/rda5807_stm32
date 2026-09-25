@@ -8,6 +8,14 @@
 #include <stdint.h>
 
 #define TERMINAL_RX_BUFFER_SIZE 128U
+#define TERMINAL_SCREEN_ROWS 35U
+
+typedef enum {
+  TERMINAL_UI_HOME = 0,
+  TERMINAL_UI_FREQUENCY,
+  TERMINAL_UI_MENU,
+  TERMINAL_UI_MENU_EDIT
+} terminal_ui_mode_t;
 
 typedef struct {
   UART_HandleTypeDef *uart;
@@ -18,11 +26,14 @@ typedef struct {
   uint8_t parser_state;
   uint8_t frequency_digit;
   radio_menu_item_t selected;
+  terminal_ui_mode_t mode;
   uint32_t parser_changed_ms;
+  uint32_t last_interaction_ms;
   uint32_t last_render_ms;
   uint32_t rendered_revision;
-  bool editing;
+  uint32_t row_hashes[TERMINAL_SCREEN_ROWS];
   bool force_render;
+  bool redraw_all;
 } terminal_ui_t;
 
 void terminal_ui_init(terminal_ui_t *ui, UART_HandleTypeDef *uart,

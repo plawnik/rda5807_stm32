@@ -42,6 +42,12 @@ HOST_TEST_SOURCES := tests/test_main.c \
 	f103radio/Core/Src/app_config.c \
 	f103radio/Core/Src/rds_decoder.c
 HOST_TEST := $(TEST_DIR)/test_runner
+HOST_TERMINAL_TEST_SOURCES := tests/test_terminal_ui.c \
+	f103radio/Core/Src/terminal_ui.c \
+	f103radio/Core/Src/uart_debug.c \
+	f103radio/Core/Src/app_config.c \
+	f103radio/Core/Src/rds_decoder.c
+HOST_TERMINAL_TEST := $(TEST_DIR)/test_terminal_ui
 
 .PHONY: all firmware test ci clean
 
@@ -68,13 +74,20 @@ $(FIRMWARE_DIR)/%.o: %.s
 	@mkdir -p $(@D)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-test: $(HOST_TEST)
+test: $(HOST_TEST) $(HOST_TERMINAL_TEST)
 	$(HOST_TEST)
+	$(HOST_TERMINAL_TEST)
 
 $(HOST_TEST): $(HOST_TEST_SOURCES)
 	@mkdir -p $(@D)
 	$(HOST_CC) -std=gnu11 -O2 -g -Wall -Wextra -Werror \
 		-If103radio/Core/Inc $(HOST_TEST_SOURCES) -o $@
+
+$(HOST_TERMINAL_TEST): $(HOST_TERMINAL_TEST_SOURCES)
+	@mkdir -p $(@D)
+	$(HOST_CC) -std=gnu11 -O2 -g -Wall -Wextra -Werror \
+		-Wno-int-to-pointer-cast $(DEFINES) $(INCLUDES) \
+		$(HOST_TERMINAL_TEST_SOURCES) -o $@
 
 ci: test firmware
 

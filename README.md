@@ -15,7 +15,7 @@ PCD8544 jest podłączony **bezpośrednio do GPIO mikrokontrolera**. Projekt nie
 2. Wgraj `rda5807_stm32.hex` albo `rda5807_stm32.bin` przez ST-Link.
 3. Podłącz moduł zgodnie z tabelą poniżej.
 4. Ustaw terminal na `115200 8N1`, emulację ANSI/VT100 i kodowanie UTF-8.
-5. Obrót enkodera na ekranie głównym zmienia częstotliwość o `0,1 MHz`; krótki klik otwiera menu, a długie przytrzymanie wycisza radio.
+5. Obrót enkodera na ekranie głównym zmienia częstotliwość zgodnie z wybranym krokiem kanału (`25/50/100/200 kHz`); krótki klik otwiera menu, a długie przytrzymanie wycisza radio.
 
 Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/FLASHING.md](docs/FLASHING.md).
 
@@ -45,7 +45,7 @@ Domyślne piny są zebrane w jednym miejscu: [`board_config.h`](f103radio/Core/I
 Ekran główny zawiera:
 
 - nazwę stacji z RDS PS;
-- częstotliwość w MHz;
+- częstotliwość w MHz, zawsze z trzema miejscami po przecinku;
 - poziom głośności i stan wyciszenia;
 - surowy poziom RSSI `0…127` oraz informację, czy układ rozpoznał stację FM;
 - stereo/mono, synchronizację RDS i stan strojenia;
@@ -57,26 +57,32 @@ Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544
 
 | Widok | Obrót | Krótki klik | Długie przytrzymanie |
 |---|---|---|---|
-| Ekran główny | strojenie co 0,1 MHz | otwarcie menu | mute/unmute |
+| Ekran główny | strojenie o wybrany krok kanału | otwarcie menu | mute/unmute |
 | Menu | wybór pozycji | wejście w edycję lub wykonanie akcji | powrót na ekran główny |
 | Edycja | zmiana wartości | zatwierdzenie | wyjście z edycji |
 
 ## Terminal ANSI/VT100
 
-Panel terminalowy jest odświeżany w miejscu, więc nie zasypuje konsoli kolejnymi liniami. Pokazuje częstotliwość, PS, PI, PTY, RadioText, czas RDS, RSSI, stereo/mono, stan tunera i wszystkie ustawienia.
+Panel terminalowy ma układ 112×35 znaków. W górnej części pokazuje duże cyfry częstotliwości `MHz`, duży odczyt głośności, pionowe wskaźniki głośności i RSSI oraz kolorowe ikonki statusu stereo/mono, RDS, stacji, mute i seek. W dolnej części pozostaje przewijana lista wszystkich ustawień.
+
+Ekran nie jest okresowo czyszczony ani rysowany od początku. Firmware wylicza skrót każdego wiersza i za pomocą pozycjonowania kursora VT100 wysyła tylko te wiersze, których treść naprawdę się zmieniła. Eliminuje to miganie terminala; pełne przerysowanie następuje tylko po uruchomieniu oraz po naciśnięciu `R`.
 
 | Klawisz | Działanie |
 |---|---|
-| `↑` / `↓` | wybór pola; podczas edycji zmiana wartości |
-| `←` / `→` | podczas edycji zmiana wartości; dla częstotliwości wybór cyfry |
+| `E` | edycja dużego odczytu częstotliwości; tryb wyłącza się po 5 s bezczynności |
+| `O` | aktywacja dolnej listy opcji |
+| `P` lub `[` | seek do poprzedniej stacji |
+| `N` lub `]` | seek do następnej stacji |
+| `↑` / `↓` | wybór pola menu; w edycji zmiana wartości lub zaznaczonej cyfry |
+| `←` / `→` | zmiana opcji; w edycji częstotliwości wybór cyfry |
 | `Enter` | wejście do edycji, zatwierdzenie lub uruchomienie akcji |
-| `0…9` | zastąpienie zaznaczonej cyfry częstotliwości |
-| `Esc` | wyjście z edycji |
+| `0…9` | zastąpienie zaznaczonej cyfry częstotliwości i przejście dalej |
+| `Esc` | wyjście z edycji lub powrót z menu do podglądu |
 | `M` | natychmiastowe mute/unmute |
 | `R` | wymuszenie pełnego odświeżenia |
 | `WASD` albo `HJKL` | zamienniki strzałek |
 
-Wartość wpisana poza zakresem bieżącego pasma jest automatycznie ograniczana do minimum lub maksimum.
+Częstotliwość jest zawsze pokazywana jako `108.000 MHz` (trzy miejsca po przecinku). Wartość wpisana poza zakresem bieżącego pasma jest automatycznie ograniczana do minimum lub maksimum. Zmiana pasma, dolnej granicy pasma wschodniego albo kroku kanału natychmiast ogranicza częstotliwość i wyrównuje ją do nowej siatki.
 
 ## Dostępne ustawienia RDA5807M
 
@@ -107,7 +113,7 @@ Ostatnie dwie strony pamięci Flash (`0x0800F800` i `0x0800FC00`) tworzą prost�
 Wymagane są `make`, `gcc` oraz GNU Arm Embedded Toolchain (`arm-none-eabi-gcc`).
 
 ```bash
-make test       # testy logiki na komputerze
+make test       # testy logiki radia i różnicowego panelu VT100
 make firmware   # ELF, HEX, BIN i MAP w build/firmware
 make ci         # testy i firmware, tak samo jak GitHub Actions
 ```

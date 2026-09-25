@@ -54,5 +54,6 @@ rda5807_result_t rda5807_seek(rda5807_t *radio,
                               const radio_settings_t *settings, bool upwards);
 rda5807_result_t rda5807_poll(rda5807_t *radio,
                               const radio_settings_t *settings);
+rda5807_result_t rda5807_power_down(rda5807_t *radio);
 
 #endif /* RDA5807_H */

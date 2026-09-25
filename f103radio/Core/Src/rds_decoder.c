@@ -2,7 +2,8 @@
 
 #include <string.h>
 
-#define RDS_CHARACTER_CONFIRMATIONS 3U
+#define RDS_INITIAL_SEGMENT_CONFIDENCE 2U
+#define RDS_MAX_SEGMENT_CONFIDENCE 3U
 
 static char printable(uint8_t value) {
   /* The display font is ASCII. Unsupported RDS characters are made explicit. */
@@ -26,36 +27,54 @@ void rds_decoder_reset_station(rds_decoder_t *decoder) {
   rds_decoder_init(decoder);
 }
 
-static bool observe_character(char *candidates, uint8_t *repetitions,
-                              uint8_t index, char value, char *output) {
-  if (repetitions[index] == 0U || candidates[index] != value) {
-    candidates[index] = value;
-    repetitions[index] = 1U;
-  } else if (repetitions[index] < RDS_CHARACTER_CONFIRMATIONS) {
-    ++repetitions[index];
+static bool observe_u16(uint16_t *candidate, uint8_t *confidence,
+                        uint16_t value) {
+  if (*confidence == 0U) {
+    *candidate = value;
+    *confidence = 1U;
+  } else if (*candidate == value) {
+    if (*confidence < RDS_MAX_SEGMENT_CONFIDENCE) ++*confidence;
+  } else if (*confidence > 1U) {
+    --*confidence;
+  } else {
+    *candidate = value;
+    *confidence = 1U;
   }
-  if (repetitions[index] < RDS_CHARACTER_CONFIRMATIONS) return false;
-  output[index] = value;
-  return true;
+  return *confidence >= RDS_INITIAL_SEGMENT_CONFIDENCE;
+}
+
+static bool observe_u32(uint32_t *candidate, uint8_t *length,
+                        uint8_t *confidence, uint32_t value,
+                        uint8_t new_length) {
+  if (*confidence == 0U) {
+    *candidate = value;
+    *length = new_length;
+    *confidence = 1U;
+  } else if (*candidate == value && *length == new_length) {
+    if (*confidence < RDS_MAX_SEGMENT_CONFIDENCE) ++*confidence;
+  } else if (*confidence > 1U) {
+    --*confidence;
+  } else {
+    *candidate = value;
+    *length = new_length;
+    *confidence = 1U;
+  }
+  return *confidence >= RDS_INITIAL_SEGMENT_CONFIDENCE;
 }
 
 static void decode_group_0(rds_decoder_t *decoder, uint16_t block_b,
                            uint16_t block_d) {
   const uint8_t segment = (uint8_t)(block_b & 0x03U);
   const uint8_t offset = (uint8_t)(segment * 2U);
-  bool first_stable;
-  bool second_stable;
 
   decoder->traffic_announcement = (block_b & (1U << 4)) != 0U;
   decoder->music = (block_b & (1U << 3)) != 0U;
-  first_stable = observe_character(
-      decoder->ps_candidates, decoder->ps_repetitions, offset,
-      printable((uint8_t)(block_d >> 8)), decoder->program_service);
-  second_stable = observe_character(
-      decoder->ps_candidates, decoder->ps_repetitions,
-      (uint8_t)(offset + 1U), printable((uint8_t)block_d),
-      decoder->program_service);
-  if (first_stable && second_stable) {
+  if (observe_u16(&decoder->ps_candidate_segments[segment],
+                  &decoder->ps_confidence[segment], block_d)) {
+    decoder->program_service[offset] =
+        printable((uint8_t)(decoder->ps_candidate_segments[segment] >> 8));
+    decoder->program_service[offset + 1U] =
+        printable((uint8_t)decoder->ps_candidate_segments[segment]);
     decoder->ps_segments |= (uint16_t)(1U << segment);
   }
   decoder->ps_valid = (decoder->ps_segments & 0x0FU) == 0x0FU;
@@ -63,25 +82,60 @@ static void decode_group_0(rds_decoder_t *decoder, uint16_t block_b,
 
 static void clear_radio_text(rds_decoder_t *decoder, bool ab) {
   fill_spaces(decoder->radio_text, 64U);
-  memset(decoder->rt_candidates, 0, sizeof(decoder->rt_candidates));
-  memset(decoder->rt_repetitions, 0, sizeof(decoder->rt_repetitions));
+  memset(decoder->rt_candidate_segments, 0,
+         sizeof(decoder->rt_candidate_segments));
+  memset(decoder->rt_confidence, 0, sizeof(decoder->rt_confidence));
+  memset(decoder->rt_candidate_length, 0,
+         sizeof(decoder->rt_candidate_length));
   decoder->rt_segments = 0U;
   decoder->radio_text_valid = false;
   decoder->text_ab = ab;
+  decoder->text_ab_candidate = ab;
+  decoder->text_ab_confidence = 0U;
   decoder->text_ab_seen = true;
 }
 
-static bool store_rt_character(rds_decoder_t *decoder, uint8_t index,
-                               uint8_t value) {
-  char character;
-  bool stable;
-  if (index >= 64U) return false;
-  character = value == 0x0DU ? '\0' : printable(value);
-  stable = observe_character(decoder->rt_candidates,
-                             decoder->rt_repetitions, index, character,
-                             decoder->radio_text);
-  if (stable && value == 0x0DU) decoder->radio_text_valid = true;
-  return stable;
+static bool accept_text_ab(rds_decoder_t *decoder, bool ab) {
+  if (!decoder->text_ab_seen) {
+    decoder->text_ab = ab;
+    decoder->text_ab_candidate = ab;
+    decoder->text_ab_seen = true;
+    return true;
+  }
+  if (decoder->text_ab == ab) {
+    decoder->text_ab_candidate = ab;
+    decoder->text_ab_confidence = 0U;
+    return true;
+  }
+  if (decoder->text_ab_candidate != ab) {
+    decoder->text_ab_candidate = ab;
+    decoder->text_ab_confidence = 1U;
+    return false;
+  }
+  if (decoder->text_ab_confidence < RDS_INITIAL_SEGMENT_CONFIDENCE) {
+    ++decoder->text_ab_confidence;
+  }
+  if (decoder->text_ab_confidence < RDS_INITIAL_SEGMENT_CONFIDENCE) {
+    return false;
+  }
+  clear_radio_text(decoder, ab);
+  return true;
+}
+
+static void commit_rt_segment(rds_decoder_t *decoder, uint8_t segment,
+                              uint8_t offset) {
+  const uint8_t length = decoder->rt_candidate_length[segment];
+  const uint32_t packed = decoder->rt_candidate_segments[segment];
+  for (uint8_t index = 0U; index < length; ++index) {
+    const uint8_t shift = (uint8_t)((length - 1U - index) * 8U);
+    const uint8_t value = (uint8_t)(packed >> shift);
+    if (value == 0x0DU) {
+      decoder->radio_text[offset + index] = '\0';
+      decoder->radio_text_valid = true;
+      break;
+    }
+    decoder->radio_text[offset + index] = printable(value);
+  }
 }
 
 static void decode_group_2(rds_decoder_t *decoder, uint16_t block_b,
@@ -89,37 +143,28 @@ static void decode_group_2(rds_decoder_t *decoder, uint16_t block_b,
   const bool ab = (block_b & (1U << 4)) != 0U;
   const uint8_t segment = (uint8_t)(block_b & 0x0FU);
   uint8_t offset;
-  bool segment_stable;
+  uint8_t length;
+  uint32_t packed;
 
-  if (decoder->text_ab_seen && decoder->text_ab != ab) {
-    clear_radio_text(decoder, ab);
-  } else {
-    decoder->text_ab = ab;
-    decoder->text_ab_seen = true;
-  }
+  /* A/B is a single vulnerable bit. Require two matching groups before a
+   * text switch so one corrected/uncorrected block cannot blank the display. */
+  if (!accept_text_ab(decoder, ab)) return;
 
   if (version_b) {
     offset = (uint8_t)(segment * 2U);
-    segment_stable =
-        store_rt_character(decoder, offset, (uint8_t)(block_d >> 8));
-    segment_stable =
-        store_rt_character(decoder, (uint8_t)(offset + 1U),
-                           (uint8_t)block_d) && segment_stable;
+    length = 2U;
+    packed = block_d;
   } else {
     offset = (uint8_t)(segment * 4U);
-    segment_stable =
-        store_rt_character(decoder, offset, (uint8_t)(block_c >> 8));
-    segment_stable =
-        store_rt_character(decoder, (uint8_t)(offset + 1U),
-                           (uint8_t)block_c) && segment_stable;
-    segment_stable =
-        store_rt_character(decoder, (uint8_t)(offset + 2U),
-                           (uint8_t)(block_d >> 8)) && segment_stable;
-    segment_stable =
-        store_rt_character(decoder, (uint8_t)(offset + 3U),
-                           (uint8_t)block_d) && segment_stable;
+    length = 4U;
+    packed = ((uint32_t)block_c << 16) | block_d;
   }
-  if (segment_stable) decoder->rt_segments |= (uint16_t)(1U << segment);
+  if (observe_u32(&decoder->rt_candidate_segments[segment],
+                  &decoder->rt_candidate_length[segment],
+                  &decoder->rt_confidence[segment], packed, length)) {
+    commit_rt_segment(decoder, segment, offset);
+    decoder->rt_segments |= (uint16_t)(1U << segment);
+  }
   if (decoder->rt_segments == 0xFFFFU) decoder->radio_text_valid = true;
 }
 
@@ -155,7 +200,21 @@ void rds_decoder_process(rds_decoder_t *decoder, const uint16_t blocks[4],
   }
 
   if (decoder->program_id != 0U && decoder->program_id != blocks[0]) {
+    if (decoder->program_id_candidate != blocks[0]) {
+      decoder->program_id_candidate = blocks[0];
+      decoder->program_id_confidence = 1U;
+      return;
+    }
+    if (decoder->program_id_confidence < RDS_INITIAL_SEGMENT_CONFIDENCE) {
+      ++decoder->program_id_confidence;
+    }
+    if (decoder->program_id_confidence < RDS_INITIAL_SEGMENT_CONFIDENCE) {
+      return;
+    }
     rds_decoder_reset_station(decoder);
+  } else {
+    decoder->program_id_candidate = blocks[0];
+    decoder->program_id_confidence = 0U;
   }
   decoder->program_id = blocks[0];
   block_b = blocks[1];

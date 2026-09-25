@@ -30,6 +30,7 @@ typedef struct {
   uint32_t parser_changed_ms;
   uint32_t last_interaction_ms;
   uint32_t last_render_ms;
+  uint32_t last_full_redraw_ms;
   uint32_t rendered_revision;
   uint32_t row_hashes[TERMINAL_SCREEN_ROWS];
   bool force_render;
@@ -38,6 +39,7 @@ typedef struct {
 
 void terminal_ui_init(terminal_ui_t *ui, UART_HandleTypeDef *uart,
                       uint32_t now_ms);
+void terminal_ui_reset(terminal_ui_t *ui, uint32_t now_ms);
 void terminal_ui_process(terminal_ui_t *ui, radio_app_t *app,
                          uint32_t now_ms);
 void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,

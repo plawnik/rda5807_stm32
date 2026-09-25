@@ -7,6 +7,11 @@
 #define RADIO_SYNTH_MIN_KHZ 50000U
 #define RADIO_SYNTH_MAX_KHZ 115000U
 #define RADIO_REGISTER_MAX_KHZ (87000U + (0x03FFU * 200U))
+#define RADIO_MAX_STATIONS 12U
+#define RADIO_STATION_NAME_LENGTH 8U
+#define RADIO_RSSI_AVERAGE_MIN_MS 200U
+#define RADIO_RSSI_AVERAGE_MAX_MS 5000U
+#define RADIO_RSSI_AVERAGE_STEP_MS 100U
 
 typedef enum {
   RADIO_BAND_EU_US = 0,
@@ -27,6 +32,20 @@ typedef enum {
   RADIO_SEEK_SNR = 0,
   RADIO_SEEK_RSSI = 2
 } radio_seek_mode_t;
+
+typedef enum {
+  RADIO_CONTROL_TUNE_50_KHZ = 0,
+  RADIO_CONTROL_TUNE_100_KHZ,
+  RADIO_CONTROL_SEEK,
+  RADIO_CONTROL_STATIONS,
+  RADIO_CONTROL_ACTION_COUNT
+} radio_control_action_t;
+
+typedef struct {
+  uint32_t frequency_khz;
+  char name[RADIO_STATION_NAME_LENGTH + 1U];
+  uint8_t reserved[3];
+} radio_station_t;
 
 typedef struct {
   uint32_t frequency_khz;
@@ -57,6 +76,12 @@ typedef struct {
   bool extended_tuning;
   bool lcd_inverted;
   bool lcd_backlight;
+  uint16_t rssi_average_ms;
+  uint8_t encoder_action;
+  uint8_t buttons_action;
+  uint8_t station_count;
+  uint8_t reserved[3];
+  radio_station_t stations[RADIO_MAX_STATIONS];
 } radio_settings_t;
 
 void radio_settings_defaults(radio_settings_t *settings);
@@ -74,5 +99,6 @@ uint32_t radio_frequency_step_channels(const radio_settings_t *settings,
 uint32_t radio_settings_plan_frequency(radio_settings_t *settings,
                                        int32_t frequency_khz,
                                        uint16_t requested_spacing_khz);
+const char *radio_control_action_name(uint8_t action);
 
 #endif /* APP_CONFIG_H */

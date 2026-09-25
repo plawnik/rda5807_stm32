@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define PCD8544_SPI_TIMEOUT_MS 20U
+
+static pcd8544_t *active_transfer_lcd;
+
 /* Compact 5x7 ASCII font, one byte per vertical column. */
 static const uint8_t font5x7[96][5] = {
     {0x00,0x00,0x00,0x00,0x00},{0x00,0x00,0x5F,0x00,0x00},
@@ -63,22 +67,26 @@ static inline void pin_write(GPIO_TypeDef *port, uint16_t pin,
   port->BSRR = state == GPIO_PIN_SET ? pin : ((uint32_t)pin << 16U);
 }
 
-static void shift_byte(uint8_t value) {
-  for (uint8_t bit = 0U; bit < 8U; ++bit) {
-    pin_write(LCD_SCLK_GPIO_Port, LCD_SCLK_Pin, GPIO_PIN_RESET);
-    pin_write(LCD_DIN_GPIO_Port, LCD_DIN_Pin,
-              (value & 0x80U) != 0U ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    pin_write(LCD_SCLK_GPIO_Port, LCD_SCLK_Pin, GPIO_PIN_SET);
-    value <<= 1;
+static bool send_bytes(pcd8544_t *lcd, bool data, const uint8_t *values,
+                       uint16_t length) {
+  HAL_StatusTypeDef status;
+  if (lcd == NULL || lcd->spi == NULL || values == NULL || length == 0U) {
+    return false;
   }
-}
-
-static void send_byte(bool data, uint8_t value) {
+  if (!pcd8544_wait_ready(lcd, PCD8544_SPI_TIMEOUT_MS)) return false;
   pin_write(LCD_DC_GPIO_Port, LCD_DC_Pin,
             data ? GPIO_PIN_SET : GPIO_PIN_RESET);
   pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_RESET);
-  shift_byte(value);
+  lcd->transfer_error = false;
+  status = HAL_SPI_Transmit(lcd->spi, values, length,
+                            PCD8544_SPI_TIMEOUT_MS);
   pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+  if (status != HAL_OK) lcd->transfer_error = true;
+  return status == HAL_OK;
+}
+
+static bool send_command(pcd8544_t *lcd, uint8_t value) {
+  return send_bytes(lcd, false, &value, 1U);
 }
 
 static void set_backlight(bool enabled) {
@@ -89,12 +97,12 @@ static void set_backlight(bool enabled) {
   pin_write(LCD_BL_GPIO_Port, LCD_BL_Pin, state);
 }
 
-void pcd8544_init(pcd8544_t *lcd, uint8_t contrast, uint8_t bias,
-                  bool inverted, bool backlight) {
-  if (lcd == NULL) return;
+void pcd8544_init(pcd8544_t *lcd, SPI_HandleTypeDef *spi, uint8_t contrast,
+                  uint8_t bias, bool inverted, bool backlight) {
+  if (lcd == NULL || spi == NULL) return;
   memset(lcd, 0, sizeof(*lcd));
+  lcd->spi = spi;
   pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
-  pin_write(LCD_SCLK_GPIO_Port, LCD_SCLK_Pin, GPIO_PIN_SET);
   pin_write(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_RESET);
   HAL_Delay(2U);
   pin_write(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_SET);
@@ -110,27 +118,96 @@ void pcd8544_configure(pcd8544_t *lcd, uint8_t contrast, uint8_t bias,
   lcd->bias = bias & 0x07U;
   lcd->inverted = inverted;
   lcd->backlight = backlight;
-  send_byte(false, 0x21U); /* Extended instruction set. */
-  send_byte(false, (uint8_t)(0x80U | lcd->contrast));
-  send_byte(false, 0x06U); /* Temperature coefficient 2. */
-  send_byte(false, (uint8_t)(0x10U | lcd->bias));
-  send_byte(false, 0x20U); /* Basic instruction set, horizontal addressing. */
-  send_byte(false, inverted ? 0x0DU : 0x0CU);
+  send_command(lcd, 0x21U); /* Extended instruction set. */
+  send_command(lcd, (uint8_t)(0x80U | lcd->contrast));
+  send_command(lcd, 0x06U); /* Temperature coefficient 2. */
+  send_command(lcd, (uint8_t)(0x10U | lcd->bias));
+  send_command(lcd, 0x20U); /* Basic set, horizontal addressing. */
+  send_command(lcd, inverted ? 0x0DU : 0x0CU);
   set_backlight(backlight);
 }
 
-void pcd8544_update(const pcd8544_t *lcd) {
-  if (lcd == NULL) return;
-  send_byte(false, 0x40U);
-  send_byte(false, 0x80U);
+bool pcd8544_update(pcd8544_t *lcd) {
+  static const uint8_t home_commands[] = {0x40U, 0x80U};
+  if (lcd == NULL || lcd->spi == NULL) return false;
+  if (!send_bytes(lcd, false, home_commands, sizeof(home_commands))) {
+    return false;
+  }
   pin_write(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET);
   pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_RESET);
-  for (uint16_t i = 0U; i < PCD8544_BUFFER_SIZE; ++i) shift_byte(lcd->buffer[i]);
-  pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+  lcd->transfer_error = false;
+  lcd->transfer_active = true;
+  active_transfer_lcd = lcd;
+  if (HAL_SPI_Transmit_DMA(lcd->spi, lcd->buffer, PCD8544_BUFFER_SIZE) !=
+      HAL_OK) {
+    active_transfer_lcd = NULL;
+    lcd->transfer_active = false;
+    lcd->transfer_error = true;
+    pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+    return false;
+  }
+  return true;
+}
+
+bool pcd8544_wait_ready(pcd8544_t *lcd, uint32_t timeout_ms) {
+  uint32_t started_ms;
+  if (lcd == NULL) return false;
+  started_ms = HAL_GetTick();
+  while (lcd->transfer_active) {
+    if ((uint32_t)(HAL_GetTick() - started_ms) >= timeout_ms) {
+      if (lcd->spi != NULL) (void)HAL_SPI_Abort(lcd->spi);
+      active_transfer_lcd = NULL;
+      lcd->transfer_active = false;
+      lcd->transfer_error = true;
+      pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+      return false;
+    }
+  }
+  return true;
+}
+
+bool pcd8544_is_busy(const pcd8544_t *lcd) {
+  return lcd != NULL && lcd->transfer_active;
+}
+
+void pcd8544_sleep(pcd8544_t *lcd) {
+  if (lcd == NULL) return;
+  (void)pcd8544_wait_ready(lcd, PCD8544_SPI_TIMEOUT_MS);
+  set_backlight(false);
+  send_command(lcd, 0x24U); /* Basic command set with power-down bit. */
+}
+
+void pcd8544_wake(pcd8544_t *lcd) {
+  if (lcd == NULL) return;
+  pcd8544_configure(lcd, lcd->contrast, lcd->bias, lcd->inverted,
+                    lcd->backlight);
+  pcd8544_clear(lcd);
+  pcd8544_update(lcd);
 }
 
 void pcd8544_clear(pcd8544_t *lcd) {
-  if (lcd != NULL) memset(lcd->buffer, 0, sizeof(lcd->buffer));
+  if (lcd != NULL) {
+    /* DMA reads directly from this buffer; do not draw over an active frame. */
+    (void)pcd8544_wait_ready(lcd, PCD8544_SPI_TIMEOUT_MS);
+    memset(lcd->buffer, 0, sizeof(lcd->buffer));
+  }
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *spi) {
+  pcd8544_t *lcd = active_transfer_lcd;
+  if (lcd == NULL || lcd->spi != spi) return;
+  pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+  lcd->transfer_active = false;
+  active_transfer_lcd = NULL;
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *spi) {
+  pcd8544_t *lcd = active_transfer_lcd;
+  if (lcd == NULL || lcd->spi != spi) return;
+  pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+  lcd->transfer_error = true;
+  lcd->transfer_active = false;
+  active_transfer_lcd = NULL;
 }
 
 void pcd8544_set_pixel(pcd8544_t *lcd, int16_t x, int16_t y, bool on) {

@@ -7,15 +7,19 @@
 typedef struct {
   char program_service[9];
   char radio_text[65];
-  char ps_candidates[8];
-  char rt_candidates[64];
-  uint8_t ps_repetitions[8];
-  uint8_t rt_repetitions[64];
+  uint16_t ps_candidate_segments[4];
+  uint32_t rt_candidate_segments[16];
+  uint8_t ps_confidence[4];
+  uint8_t rt_confidence[16];
+  uint8_t rt_candidate_length[16];
   uint16_t program_id;
+  uint16_t program_id_candidate;
   uint16_t modified_julian_day;
   uint16_t ps_segments;
   uint16_t rt_segments;
   uint8_t program_type;
+  uint8_t program_id_confidence;
+  uint8_t text_ab_confidence;
   uint8_t local_hour;
   uint8_t local_minute;
   int8_t local_offset_half_hours;
@@ -26,6 +30,7 @@ typedef struct {
   bool radio_text_valid;
   bool clock_valid;
   bool text_ab;
+  bool text_ab_candidate;
   bool text_ab_seen;
 } rds_decoder_t;
 

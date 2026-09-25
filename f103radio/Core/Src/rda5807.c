@@ -206,3 +206,15 @@ rda5807_result_t rda5807_poll(rda5807_t *radio,
   }
   return RDA5807_OK;
 }
+
+rda5807_result_t rda5807_power_down(rda5807_t *radio) {
+  rda5807_result_t result;
+  if (radio == NULL || radio->i2c == NULL) return RDA5807_INVALID_ARGUMENT;
+  radio->registers[0] &= (uint16_t)~(REG02_ENABLE | REG02_DMUTE |
+                                     REG02_SEEK | REG02_RDS_EN);
+  radio->registers[1] &= (uint16_t)~REG03_TUNE;
+  radio->operation = RDA5807_OPERATION_IDLE;
+  result = write_registers(radio);
+  radio->online = false;
+  return result;
+}

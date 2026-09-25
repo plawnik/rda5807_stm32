@@ -34,7 +34,8 @@ static void inspect_sequences(const uint8_t *data, uint16_t size) {
   }
 }
 
-HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *uart, uint8_t *data,
+HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *uart,
+                                    const uint8_t *data,
                                     uint16_t size, uint32_t timeout) {
   (void)uart;
   (void)timeout;
@@ -49,6 +50,16 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *uart, uint8_t *data,
   (void)data;
   (void)size;
   return HAL_OK;
+}
+
+HAL_StatusTypeDef HAL_UART_AbortReceive(UART_HandleTypeDef *uart) {
+  (void)uart;
+  return HAL_OK;
+}
+
+uint8_t radio_app_display_rssi(const radio_app_t *app) {
+  return app->averaged_rssi_valid ? app->averaged_rssi
+                                  : app->radio.status.rssi;
 }
 
 void radio_app_set_frequency(radio_app_t *app, uint32_t frequency_khz,
@@ -87,15 +98,8 @@ void radio_app_seek(radio_app_t *app, bool upwards, uint32_t now_ms) {
 }
 
 const char *radio_app_menu_label(radio_menu_item_t item) {
-  static const char *const labels[RADIO_MENU_COUNT] = {
-      "Czestotliwosc", "Glosnosc", "Wyciszenie", "Tryb audio",
-      "Podbicie basu", "Szukaj w gore", "Szukaj w dol", "Pasmo",
-      "Dolne pasmo", "Krok kanalu", "Dekoder RDS", "Standard RDS",
-      "Deemfaza", "Koniec szukania", "Alg. szukania", "Prog szukania",
-      "Stary prog", "Soft mute", "Soft blend", "Prog soft blend", "AFC",
-      "Nowy demodulator", "Wejscie LNA", "Prad LNA", "Kontrast LCD",
-      "Negatyw LCD", "Podswietlenie", "Ustawienia domyslne"};
-  return item < RADIO_MENU_COUNT ? labels[item] : "?";
+  (void)item;
+  return "Opcja testowa";
 }
 
 void radio_app_menu_value(const radio_app_t *app, radio_menu_item_t item,
@@ -203,7 +207,9 @@ static void test_incremental_render(void) {
   terminal_ui_process(&ui, &app, 400U);
   first_cursors = cursor_sequences;
   terminal_ui_render(&ui, &app, 400U);
-  assert(clear_sequences == first_clears + 1U);
+  /* A forced redraw rewrites rows in place; clearing the whole terminal would
+   * reintroduce the visible flash which the incremental renderer avoids. */
+  assert(clear_sequences == first_clears);
   assert(cursor_sequences - first_cursors == TERMINAL_SCREEN_ROWS);
 }
 
@@ -264,7 +270,7 @@ static void test_modes_and_shortcuts(void) {
   terminal_ui_process(&ui, &app, 7600U);
   queue_arrow(&ui, 'B');
   terminal_ui_process(&ui, &app, 7650U);
-  assert(ui.selected == (radio_menu_item_t)RADIO_MENU_COUNT);
+  assert(ui.selected == RADIO_MENU_EXTENDED_RANGE);
   queue_key(&ui, '\r');
   terminal_ui_process(&ui, &app, 7675U);
   assert(ui.mode == TERMINAL_UI_MENU_EDIT);

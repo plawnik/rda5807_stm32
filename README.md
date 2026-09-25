@@ -5,7 +5,9 @@
 
 Odbiornik FM zbudowany na `STM32F103C8T6` i `RDA5807M`. Obsługuje enkoder z przyciskiem, wyświetlacz Nokia `PCD8544` 84×48, RDS, zapis ustawień w pamięci Flash oraz kolorowy panel sterowania w terminalu ANSI/VT100.
 
-PCD8544 jest podłączony **bezpośrednio do GPIO mikrokontrolera**. Projekt nie używa ekspandera ani magistrali I²C do obsługi wyświetlacza.
+PCD8544 jest podłączony **bezpośrednio do STM32**. Projekt nie używa
+ekspandera: grafika powstaje w 504-bajtowym buforze RAM, a cały ekran jest
+wysyłany jednym transferem SPI1 TX DMA.
 
 > Firmware kompiluje się i ma testy automatyczne, ale przed podłączeniem końcówki audio należy jeszcze zweryfikować na fizycznym egzemplarzu płytki mapę pinów oraz polaryzację podświetlenia.
 
@@ -15,7 +17,8 @@ PCD8544 jest podłączony **bezpośrednio do GPIO mikrokontrolera**. Projekt nie
 2. Wgraj `rda5807_stm32.hex` albo `rda5807_stm32.bin` przez ST-Link.
 3. Podłącz moduł zgodnie z tabelą poniżej.
 4. Ustaw terminal na `115200 8N1`, emulację ANSI/VT100 i kodowanie UTF-8.
-5. Obrót enkodera na ekranie głównym zmienia częstotliwość zgodnie z wybranym krokiem kanału (`25/50/100/200 kHz`); krótki klik otwiera menu, a długie przytrzymanie wycisza radio.
+5. Radio uruchomi się automatycznie. Krótki klik enkodera otwiera menu, a
+   długie przytrzymanie pokazuje animację zamykania i przechodzi do standby.
 
 Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/FLASHING.md](docs/FLASHING.md).
 
@@ -28,8 +31,11 @@ Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/
 | Enkoder A | PA15 | wejście | TIM2 CH1, wewnętrzne podciąganie |
 | Enkoder B | PB3 | wejście | TIM2 CH2, wewnętrzne podciąganie |
 | Przycisk enkodera | PB4 | wejście | aktywny stan niski, zwierany do GND |
-| PCD8544 CLK | PB6 | wyjście | programowy interfejs szeregowy |
-| PCD8544 DIN | PB7 | wyjście | bezpośrednio z GPIO |
+| Przycisk lewo | PA0 | wejście | pull-up, zwierany do GND |
+| Przycisk prawo | PA2 | wejście | pull-up, zwierany do GND |
+| Przycisk OK | PA8 | wejście | pull-up, zwierany do GND |
+| PCD8544 CLK | PA5 | wyjście | SPI1 SCK |
+| PCD8544 DIN | PA7 | wyjście | SPI1 MOSI, TX only |
 | PCD8544 D/C | PB8 | wyjście | dane/polecenie |
 | PCD8544 CE | PB9 | wyjście | chip enable |
 | PCD8544 RST | PB12 | wyjście | reset wyświetlacza |
@@ -53,19 +59,28 @@ Ekran główny zawiera:
 
 Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544 są zapisane po polsku bez znaków diakrytycznych, ponieważ w pamięci mikrokontrolera znajduje się mała czcionka ASCII. Terminal używa pełnego UTF-8.
 
-## Sterowanie enkoderem
+## Sterowanie lokalne
 
-| Widok | Obrót | Krótki klik | Długie przytrzymanie |
+| Widok | Obrót / PA0-PA2 | Klik enkodera / PA8 | Długie przytrzymanie enkodera |
 |---|---|---|---|
-| Ekran główny | strojenie o wybrany krok kanału | otwarcie menu | mute/unmute |
-| Menu | wybór pozycji | wejście w edycję lub wykonanie akcji | powrót na ekran główny |
-| Edycja | zmiana wartości | zatwierdzenie | wyjście z edycji |
+| Ekran główny | konfigurowalnie: krok 50/100 kHz, seek albo lista stacji | otwarcie menu | animacja i standby |
+| Menu | wybór pozycji | wejście, edycja albo wykonanie akcji | animacja i standby |
+| Edycja | zmiana wartości | zatwierdzenie | animacja i standby |
+
+Menu LCD ma poziom kategorii i poziom opcji. Kategoria `Stacje` udostępnia do
+12 wpisów: kreator dodania (częstotliwość i nazwa), strojenie, edycję oraz
+usuwanie. `BAND`, baza 50/65 MHz i `SPACE` nie są pokazywane użytkownikowi —
+program wylicza je dla każdej częstotliwości.
 
 ## Terminal ANSI/VT100
 
 Panel terminalowy ma układ 112×35 znaków. W górnej części pokazuje zbudowaną z pełnych bloków `█` częstotliwość `MHz`, duży odczyt głośności, pionowe wskaźniki głośności i RSSI oraz kolorowe ikonki statusu stereo/mono, RDS, stacji, mute i seek. W dolnej części pozostaje przewijana lista ustawień.
 
-Ekran nie jest okresowo czyszczony ani rysowany od początku. Firmware wylicza skrót każdego wiersza i za pomocą pozycjonowania kursora VT100 wysyła tylko te wiersze, których treść naprawdę się zmieniła. Eliminuje to miganie terminala; pełne przerysowanie następuje tylko po uruchomieniu oraz po naciśnięciu `R`.
+Ekran nie jest okresowo czyszczony. Firmware wylicza skrót każdego wiersza i
+za pomocą pozycjonowania kursora VT100 wysyła tylko wiersze, których treść się
+zmieniła. Co 5 sekund ponawia inicjalizację terminala i przepisuje panel w
+miejscu, dzięki czemu Putty uruchomiony po radiu odzyska widok bez migania.
+`R` wymusza takie samo bezpieczne przerysowanie.
 
 | Klawisz | Działanie |
 |---|---|
@@ -85,31 +100,40 @@ Ekran nie jest okresowo czyszczony ani rysowany od początku. Firmware wylicza s
 
 Częstotliwość terminala jest zawsze pokazywana jako `XXX.XX MHz`, na przykład `050.00`, `087.50` albo `108.00`. Domyślnie terminal udostępnia udokumentowany zakres syntezera `50–115 MHz`; użytkownik nie wybiera pasma ani odstępu kanałów. Firmware sam dobiera `BAND`, bazę 50/76/87 MHz i `SPACE` 50 lub 100 kHz. Wpis spoza zakresu jest ograniczany do najbliższej granicy, a najmłodsza pozycja odczytu jest wyrównywana do osiągalnej siatki 50 kHz.
 
-Opcja terminala `Zakres rozszerzony` odblokowuje czysto rejestrowy zakres do `291,60 MHz`, wyliczony jako `87,0 MHz + 1023 × 200 kHz`. Firmware automatycznie przechodzi wtedy na `SPACE` 100 lub 200 kHz, gdy 10-bitowy `CHAN` nie mieści żądanej częstotliwości. Jest to świadomy tryb eksperymentalny poza zakresem gwarantowanym przez producenta: PLL może się nie zablokować, odczyt częstotliwości nie potwierdza rzeczywistego odbioru, a analogowy tor wejściowy nie jest przeznaczony dla całego zakresu `115–291,60 MHz`.
+Opcja `Zakres rozszerzony` w terminalu i LCD odblokowuje czysto rejestrowy
+zakres do `291,60 MHz`, wyliczony jako `87,0 MHz + 1023 × 200 kHz`. Firmware
+automatycznie przechodzi wtedy na `SPACE` 100 lub 200 kHz, gdy 10-bitowy
+`CHAN` nie mieści żądanej częstotliwości. Jest to świadomy tryb eksperymentalny
+poza zakresem gwarantowanym przez producenta: PLL może się nie zablokować,
+odczyt częstotliwości nie potwierdza rzeczywistego odbioru, a analogowy tor RF
+nie jest przeznaczony dla całego zakresu `115–291,60 MHz`.
 
 `RSSI[6:0]` jest pokazywany jako kod `0…127` oraz procent tej skali. Według dokumentacji RDA5807M skala jest logarytmiczna, ale producent nie podaje przelicznika na dBm ani dBµV. `127` oznacza maksimum wewnętrznej skali, a nie `0 dBi`; dBi jest jednostką zysku anteny, nie mocy odebranego sygnału.
 
-PS i RadioText nie są przepisywane na ekran po pojedynczej odebranej grupie. Każdy znak musi pojawić się trzy razy z tą samą wartością na tej samej pozycji, zanim zostanie zatwierdzony. Pojedynczy uszkodzony znak nie powoduje więc migania stabilnego tekstu RDS.
+PS i RadioText nie są przepisywane na ekran po pojedynczej grupie. Dekoder
+potwierdza całe segmenty i stosuje histerezę przed zastąpieniem stabilnej
+treści. Pojedyncza podejrzana zmiana PI albo bitu A/B jest odrzucana, więc nie
+zeruje poprawnego tekstu.
 
 ## Dostępne ustawienia RDA5807M
 
-`Terminal + LCD` oznacza opcję dostępną w obu interfejsach. Ręczne ustawienia pasma są celowo ukryte w terminalu, ponieważ jego strojenie dobiera je automatycznie. Tryb rozszerzony jest z kolei dostępny wyłącznie w terminalu, więc nie zmienia obecnej obsługi LCD i enkodera.
+`Terminal + LCD` oznacza opcję dostępną w obu interfejsach. Ręczny wybór
+pasma, dolnej bazy i `SPACE` jest ukryty wszędzie; oba interfejsy korzystają z
+jednego automatycznego planera częstotliwości.
 
 ### Strojenie i wyszukiwanie
 
 | Opcja | Gdzie | Wartości / domyślna | Co zmienia i jaki ma wpływ |
 |---|---|---|---|
-| `Czestotliwosc` | Terminal + LCD | terminal `50–115 MHz`, domyślnie `106,10 MHz` | Uruchamia strojenie PLL. Terminal sam wybiera bazę, `BAND`, `SPACE` i `CHAN`; LCD zachowuje ręcznie wybrane pasmo i krok. Zmiana częstotliwości zeruje zebrany tekst RDS, aby nie mieszać danych dwóch stacji. |
-| `Zakres rozszerzony` | tylko terminal | `WYL.` / `WL.`, domyślnie `WYL.` | Po włączeniu podnosi limit z `115,00` do rejestrowych `291,60 MHz`. Powyżej możliwości bieżącego `SPACE` firmware automatycznie przechodzi na 100 lub 200 kHz. Jest to tryb eksperymentalny: brak gwarancji zablokowania PLL i odbioru przez analogowy tor RF. |
+| `Czestotliwosc` | Terminal + LCD | `50–115 MHz`, domyślnie `106,10 MHz` | Uruchamia strojenie PLL. Program sam wybiera bazę, `BAND`, `SPACE` i `CHAN`. Zmiana częstotliwości zeruje dane poprzedniej stacji RDS. |
+| `Zakres rozszerzony` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WYL.` | Podnosi limit z `115,00` do rejestrowych `291,60 MHz`. Jest to tryb eksperymentalny bez gwarancji blokady PLL i odbioru przez analogowy tor RF. |
 | `Szukaj w gore` | Terminal + LCD | akcja | Ustawia bit `SEEKUP` i uruchamia sprzętowy seek w kierunku rosnącej częstotliwości. Operacja kończy się po znalezieniu stacji spełniającej aktywne progi albo na granicy pasma. Na ekranie głównym terminala odpowiada jej `→`. |
 | `Szukaj w dol` | Terminal + LCD | akcja | Jak wyżej, ale szuka w kierunku malejącej częstotliwości. Na ekranie głównym terminala odpowiada jej `←`. |
-| `Pasmo` | tylko LCD | `87–108`, `76–91`, `76–108`, `50/65–76 MHz`; domyślnie `87–108` | Ręcznie ustawia `BAND[1:0]` i podstawę wzoru kanału. Zmiana może natychmiast ograniczyć bieżącą częstotliwość. Terminal nie pokazuje tej opcji, bo robi to automatycznie. |
-| `Dolne pasmo` | tylko LCD | `50` / `65 MHz`; domyślnie `65 MHz` | Ustawia bit `65M_50M MODE` używany wyłącznie dla `BAND=3`. Nie ma wpływu na pozostałe pasma. Terminal wybiera bazę 50 MHz automatycznie, kiedy jest potrzebna. |
-| `Krok kanalu` | tylko LCD | `25`, `50`, `100`, `200 kHz`; domyślnie `100 kHz` | Ustawia `SPACE[1:0]`. Mniejszy krok daje gęstszą siatkę, ale sprzętowy seek ma więcej kanałów do sprawdzenia; większy krok ogranicza możliwe częstotliwości. Terminal dobiera krok sam. |
 | `Koniec szukania` | Terminal + LCD | `ZAPETL` / `STOP`; domyślnie `ZAPETL` | Steruje `SKMODE`. `ZAPETL` przechodzi z końca pasma na jego początek i szuka dalej; `STOP` kończy operację na granicy. |
 | `Alg. szukania` | Terminal + LCD | `SNR` / `RSSI`; domyślnie `SNR` | Wybiera sposób kwalifikowania znalezionej stacji. SNR opiera decyzję na jakości sygnału, a tryb RSSI dodaje ocenę jego poziomu; wynik zależy także od odpowiedniego progu poniżej. |
 | `Prog szukania` | Terminal + LCD | `0…15`, domyślnie `8` | Ustawia `SEEKTH`, czyli próg SNR. Wyższa wartość zwykle odrzuca więcej słabych lub zaszumionych częstotliwości, ale może pominąć użyteczną stację. |
 | `Stary prog` | Terminal + LCD | `0…63`, domyślnie `16` | Ustawia `SEEK_TH_OLD`, używany przez udokumentowany tryb seek RSSI. Wyższy próg zawęża wyniki do silniejszych sygnałów; dokumentacja nie podaje jego bezwzględnej jednostki, więc najlepiej dobrać go doświadczalnie. |
+| `Usrednianie RSSI` | Terminal + LCD | `0,2…5,0 s`, krok `0,1 s`, domyślnie `1,0 s` | Ustawia czas okna średniej pokazywanej na LCD i w terminalu. Krótsze okno reaguje szybciej, dłuższe ogranicza skakanie wskaźnika. Nie zmienia pracy toru RF. |
 
 ### Dźwięk i tor odbiorczy
 
@@ -135,18 +159,35 @@ PS i RadioText nie są przepisywane na ekran po pojedynczej odebranej grupie. Ka
 | `Dekoder RDS` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Włącza sprzętowy dekoder RDS. Po wyłączeniu nie są aktualizowane PS, RadioText, PI, PTY ani czas CT; odbiór audio FM działa nadal. |
 | `Standard RDS` | Terminal + LCD | `RDS` / `RBDS`, domyślnie `RDS` | Wybiera regionalną interpretację danych przez układ: RDS jest właściwy m.in. dla Europy, RBDS dla Ameryki Północnej. Nie zmienia częstotliwości ani toru audio. |
 
-Znaki nazwy stacji i RadioText są publikowane dopiero po trzech identycznych odbiorach na tej samej pozycji. Ta stabilizacja działa niezależnie od powyższych dwóch przełączników i chroni interfejs przed miganiem pojedynczych błędnych znaków.
+PS i RadioText są zatwierdzane segmentami po zgodnych powtórzeniach. Stabilna
+treść ma dodatkową histerezę, a zmiany PI i A/B są filtrowane osobno. Chroni to
+interfejs przed miganiem po pojedynczej błędnej grupie, ale pozwala szybciej
+zbudować tekst niż potwierdzanie każdego znaku w izolacji.
 
-### Wyświetlacz i ustawienia systemowe
+### Sterowanie, wyświetlacz i system
 
 | Opcja | Gdzie | Wartości / domyślna | Co zmienia i jaki ma wpływ |
 |---|---|---|---|
 | `Kontrast LCD` | Terminal + LCD | `20…127`, domyślnie `56` | Zmienia napięcie sterujące matrycą PCD8544. Za mała wartość daje blady obraz, za duża ciemne tło i zlewanie pikseli; optymalna zależy od egzemplarza oraz temperatury. |
 | `Negatyw LCD` | Terminal + LCD | `NIE` / `TAK`, domyślnie `NIE` | Zamienia jasne i ciemne piksele przez tryb kontrolera LCD. Nie modyfikuje zawartości ekranu ani interfejsu terminalowego. |
 | `Podswietlenie` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Steruje wyjściem podświetlenia PCD8544. Wpływa na pobór prądu podświetlenia, ale nie na kontrast matrycy. |
-| `Ustawienia domyslne` | Terminal + LCD | akcja | Przywraca wszystkie wartości domyślne, stroi `106,10 MHz`, zeruje bieżące dane RDS i oznacza konfigurację do zapisu w Flash. Tej operacji nie da się cofnąć po wykonaniu kolejnego zapisu. |
+| `Ruch enkodera` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa działanie obrotu enkodera na ekranie głównym. |
+| `Przyciski L/P` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa niezależne działanie PA0 i PA2 na ekranie głównym. |
+| `Stacje` | LCD | maks. 12 nazw i częstotliwości | Pozwala dodać, dostroić, edytować i usunąć wpis; lista jest zapisywana razem z konfiguracją. |
+| `Ustawienia domyslne` | Terminal + LCD | akcja | Przywraca wszystkie wartości domyślne, stroi `106,10 MHz`, czyści listę stacji i bieżące dane RDS, po czym oznacza konfigurację do zapisu w Flash. |
 
 I²S, tryb testowy `DIRECT_MODE`, zapisy do rejestrów zastrzeżonych i ryzykowny tryb `NON_CALIBRATE` nie są udostępnione. Wyświetlacz oraz płytka nie wykorzystują I²S, a wpisywanie nieudokumentowanych wartości nie daje tu funkcjonalnej korzyści. Pełne uzasadnienie i mapowanie ustawień na rejestry: [docs/REGISTER_OPTIONS.md](docs/REGISTER_OPTIONS.md).
+
+## Animacje startu i zamykania
+
+Firmware zawiera cztery oryginalne, monochromatyczne animacje pixel-art:
+skalę radia, equalizer, antenę i zasilanie. Maski w
+[`splash_config.h`](f103radio/Core/Inc/splash_config.h) określają, z których
+animacji losowany jest start i shutdown. Narzędzie
+[`tools/convert_splash.py`](tools/convert_splash.py) zamienia własny GIF/PNG na
+ramki RLE. Obrazy z podanego projektu ArtStation nie są redystrybuowane bez
+jednoznacznej licencji; procedura dodania legalnych plików jest opisana w
+[`assets/splash/README.md`](assets/splash/README.md).
 
 ## Zapamiętywanie ustawień
 
@@ -167,7 +208,7 @@ make firmware   # ELF, HEX, BIN i MAP w build/firmware
 make ci         # testy i firmware, tak samo jak GitHub Actions
 ```
 
-STM32CubeIDE nadal może otworzyć plik [`f103radio.ioc`](f103radio/f103radio.ioc), ale głównym, powtarzalnym systemem budowania jest repozytoryjny `Makefile`.
+STM32CubeIDE nadal może otworzyć plik [`f103radio.ioc`](f103radio/f103radio.ioc), ale głównym, powtarzalnym systemem budowania jest repozytoryjny `Makefile`. Repo zawiera oficjalny STM32CubeF1 `v1.8.7`; dokładne piny commitów HAL/CMSIS są w [`f103radio/Drivers/VERSIONS.md`](f103radio/Drivers/VERSIONS.md).
 
 ## CI/CD i wydania
 
@@ -186,6 +227,8 @@ W repozytorium pozostaje więc jedno aktualne automatyczne wydanie, a numer buil
 - [Architektura firmware](docs/ARCHITECTURE.md)
 - [Opcje i rejestry RDA5807M](docs/REGISTER_OPTIONS.md)
 - [Wgrywanie firmware](docs/FLASHING.md)
+- [Wersje oficjalnego HAL i CMSIS](f103radio/Drivers/VERSIONS.md)
+- [Źródłowe datasheety](docs/datasheets/README.md)
 
 ## Ważne przed pierwszym uruchomieniem
 

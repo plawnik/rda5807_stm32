@@ -12,7 +12,8 @@ void uart_debug_init(UART_HandleTypeDef *uart) {
 
 void uart_debug_write_n(const char *data, size_t length) {
   if (debug_uart == NULL || data == NULL || length == 0U) return;
-  HAL_UART_Transmit(debug_uart, (uint8_t *)data, (uint16_t)length, 250U);
+  HAL_UART_Transmit(debug_uart, (const uint8_t *)data, (uint16_t)length,
+                    250U);
 }
 
 void uart_debug_write(const char *text) {

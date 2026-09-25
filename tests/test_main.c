@@ -120,7 +120,7 @@ static void test_radio_text_and_ab_flag(void) {
   for (uint8_t repeat = 0U; repeat < 2U; ++repeat) {
     rds_decoder_process(&decoder, blocks, 0U, 0U);
   }
-  assert(decoder.radio_text[0] == ' ');
+  assert(strncmp(decoder.radio_text, "Hell", 4U) == 0);
   rds_decoder_process(&decoder, blocks, 0U, 0U);
   blocks[1] = (uint16_t)((2U << 12) | 1U);
   blocks[2] = chars('o', ' '); blocks[3] = chars('R', 'D');
@@ -142,6 +142,8 @@ static void test_radio_text_and_ab_flag(void) {
 
   blocks[1] = (uint16_t)((2U << 12) | (1U << 4));
   blocks[2] = chars('N', 'o'); blocks[3] = chars('w', 'y');
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  assert(strcmp(decoder.radio_text, "Hello RDS!") == 0);
   for (uint8_t repeat = 0U; repeat < 3U; ++repeat) {
     rds_decoder_process(&decoder, blocks, 0U, 0U);
   }
@@ -166,11 +168,35 @@ static void test_rds_clock(void) {
   assert(decoder.local_minute == 30U);
 }
 
+static void test_program_id_hysteresis(void) {
+  rds_decoder_t decoder;
+  uint16_t blocks[4] = {0x1111U, 0U, 0U, chars('O', 'K')};
+  rds_decoder_init(&decoder);
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  assert(decoder.program_id == 0x1111U);
+  assert(decoder.program_service[0] == 'O');
+
+  blocks[0] = 0x2222U;
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  assert(decoder.program_id == 0x1111U);
+  assert(decoder.program_service[0] == 'O');
+
+  blocks[0] = 0x1111U;
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  blocks[0] = 0x2222U;
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  assert(decoder.program_id == 0x2222U);
+  assert(decoder.program_service[0] == ' ');
+}
+
 int main(void) {
   test_frequency_rules();
   test_program_service();
   test_radio_text_and_ab_flag();
   test_rds_clock();
+  test_program_id_hysteresis();
   puts("All host tests passed.");
   return 0;
 }

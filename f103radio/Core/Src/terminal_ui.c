@@ -18,6 +18,7 @@
 #define ANSI_SELECTED    "\x1b[30;46m"
 #define ANSI_DIGIT       "\x1b[30;43m"
 #define TERMINAL_RENDER_INTERVAL_MS 100U
+#define TERMINAL_FULL_REDRAW_INTERVAL_MS 5000U
 #define TERMINAL_ESCAPE_TIMEOUT_MS 60U
 #define TERMINAL_FREQUENCY_EDIT_TIMEOUT_MS 5000U
 #define TERMINAL_MENU_ROWS 12U
@@ -72,11 +73,15 @@ static const uint8_t small_digits[10][5] = {
 
 static terminal_ui_t *active_terminal;
 
-#define TERMINAL_MENU_EXTENDED_RANGE ((radio_menu_item_t)RADIO_MENU_COUNT)
+static void initialize_terminal_session(bool clear_screen) {
+  uart_debug_write("\x1b[?1049h\x1b[8;35;112t\x1b[H\x1b[?25l\x1b[?7l"
+                   "\x1b]0;RDA5807 STM32\x07");
+  if (clear_screen) uart_debug_write("\x1b[2J\x1b[H");
+}
 
 static const radio_menu_item_t terminal_menu_items[] = {
     RADIO_MENU_FREQUENCY,
-    TERMINAL_MENU_EXTENDED_RANGE,
+    RADIO_MENU_EXTENDED_RANGE,
     RADIO_MENU_VOLUME,
     RADIO_MENU_MUTE,
     RADIO_MENU_AUDIO_MODE,
@@ -89,6 +94,7 @@ static const radio_menu_item_t terminal_menu_items[] = {
     RADIO_MENU_SEEK_LIMIT,
     RADIO_MENU_SEEK_ALGORITHM,
     RADIO_MENU_SEEK_THRESHOLD,
+    RADIO_MENU_RSSI_AVERAGE,
     RADIO_MENU_OLD_SEEK_THRESHOLD,
     RADIO_MENU_SOFTMUTE,
     RADIO_MENU_SOFTBLEND,
@@ -100,6 +106,8 @@ static const radio_menu_item_t terminal_menu_items[] = {
     RADIO_MENU_LCD_CONTRAST,
     RADIO_MENU_LCD_INVERT,
     RADIO_MENU_LCD_BACKLIGHT,
+    RADIO_MENU_ENCODER_ACTION,
+    RADIO_MENU_BUTTON_ACTION,
     RADIO_MENU_DEFAULTS};
 
 #define TERMINAL_MENU_ITEM_COUNT \
@@ -296,14 +304,14 @@ static void handle_key(terminal_ui_t *ui, radio_app_t *app,
   if (event.code == KEY_ENTER || event.code == KEY_ESCAPE) {
     ui->mode = TERMINAL_UI_MENU;
   } else if (event.code == KEY_LEFT || event.code == KEY_DOWN) {
-    if (ui->selected == TERMINAL_MENU_EXTENDED_RANGE) {
+    if (ui->selected == RADIO_MENU_EXTENDED_RANGE) {
       radio_app_set_extended_tuning(app, !app->settings.extended_tuning,
                                     now_ms);
     } else {
       radio_app_menu_adjust(app, ui->selected, -1, now_ms);
     }
   } else if (event.code == KEY_RIGHT || event.code == KEY_UP) {
-    if (ui->selected == TERMINAL_MENU_EXTENDED_RANGE) {
+    if (ui->selected == RADIO_MENU_EXTENDED_RANGE) {
       radio_app_set_extended_tuning(app, !app->settings.extended_tuning,
                                     now_ms);
     } else {
@@ -535,7 +543,7 @@ static void render_dashboard(terminal_ui_t *ui, const radio_app_t *app) {
     build_level_panel(left, 18U, row, app->settings.volume, 15U,
                       "GLOSNOSC", 2U);
     build_frequency_row(ui, app, row, center, sizeof(center));
-    build_level_panel(right, 20U, row, app->radio.status.rssi, 127U,
+    build_level_panel(right, 20U, row, radio_app_display_rssi(app), 127U,
                       "SYGNAL RSSI", 3U);
     snprintf(raw_line, sizeof(raw_line), ANSI_GREEN "%s" ANSI_RESET "%s"
              ANSI_CYAN "%s" ANSI_RESET, left, center, right);
@@ -564,7 +572,7 @@ static void render_menu(terminal_ui_t *ui, const radio_app_t *app) {
       snprintf(value, sizeof(value), "%03lu.%02lu MHz",
                (unsigned long)(app->settings.frequency_khz / 1000U),
                (unsigned long)((app->settings.frequency_khz % 1000U) / 10U));
-    } else if (item == TERMINAL_MENU_EXTENDED_RANGE) {
+    } else if (item == RADIO_MENU_EXTENDED_RANGE) {
       snprintf(value, sizeof(value), "%s",
                app->settings.extended_tuning
                    ? "WL. (max 291.60 MHz)"
@@ -579,7 +587,7 @@ static void render_menu(terminal_ui_t *ui, const radio_app_t *app) {
       write_rowf(ui, (uint8_t)(TERMINAL_FIRST_MENU_ROW + row),
                  "%s> %02u  %-32s %-34s  %s%s", style,
                  (unsigned)item_index + 1U,
-                 item == TERMINAL_MENU_EXTENDED_RANGE
+                 item == RADIO_MENU_EXTENDED_RANGE
                      ? "Zakres rozszerzony"
                      : radio_app_menu_label(item),
                  value,
@@ -589,7 +597,7 @@ static void render_menu(terminal_ui_t *ui, const radio_app_t *app) {
       write_rowf(ui, (uint8_t)(TERMINAL_FIRST_MENU_ROW + row),
                  "  %02u  %-32s %-34s",
                  (unsigned)item_index + 1U,
-                 item == TERMINAL_MENU_EXTENDED_RANGE
+                 item == RADIO_MENU_EXTENDED_RANGE
                      ? "Zakres rozszerzony"
                      : radio_app_menu_label(item),
                  value);
@@ -605,14 +613,23 @@ void terminal_ui_init(terminal_ui_t *ui, UART_HandleTypeDef *uart,
   ui->parser_changed_ms = now_ms;
   ui->last_interaction_ms = now_ms;
   ui->frequency_digit = 3U;
+  ui->selected = RADIO_MENU_FREQUENCY;
   ui->mode = TERMINAL_UI_HOME;
+  ui->last_full_redraw_ms = now_ms;
   ui->force_render = true;
   ui->redraw_all = true;
   active_terminal = ui;
   uart_debug_init(uart);
-  uart_debug_write("\x1b[?1049h\x1b[2J\x1b[H\x1b[?25l\x1b[?7l"
-                   "\x1b]0;RDA5807 STM32\x07");
+  initialize_terminal_session(true);
   HAL_UART_Receive_IT(uart, &ui->rx_byte, 1U);
+}
+
+void terminal_ui_reset(terminal_ui_t *ui, uint32_t now_ms) {
+  UART_HandleTypeDef *uart;
+  if (ui == NULL || ui->uart == NULL) return;
+  uart = ui->uart;
+  (void)HAL_UART_AbortReceive(uart);
+  terminal_ui_init(ui, uart, now_ms);
 }
 
 void terminal_ui_uart_rx_complete(UART_HandleTypeDef *uart) {
@@ -664,7 +681,13 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
   const char *station_state;
   const char *frequency_range;
   uint8_t rssi_percent;
+  uint8_t shown_rssi;
   if (ui == NULL || app == NULL) return;
+  if ((uint32_t)(now_ms - ui->last_full_redraw_ms) >=
+      TERMINAL_FULL_REDRAW_INTERVAL_MS) {
+    ui->redraw_all = true;
+    ui->force_render = true;
+  }
   if (!ui->force_render &&
       (uint32_t)(now_ms - ui->last_render_ms) <
           TERMINAL_RENDER_INTERVAL_MS) {
@@ -674,7 +697,10 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
   ui->last_render_ms = now_ms;
   ui->rendered_revision = app->revision;
 
-  if (ui->redraw_all) uart_debug_write("\x1b[2J");
+  if (ui->redraw_all) {
+    initialize_terminal_session(false);
+    ui->last_full_redraw_ms = now_ms;
+  }
   make_border(border);
   trim_copy(ps, sizeof(ps),
             app->rds.ps_valid ? app->rds.program_service : "--", 8U);
@@ -686,8 +712,8 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
   frequency_range = app->settings.extended_tuning
                         ? "050.00-291.60 MHz (EKSP.)"
                         : "050.00-115.00 MHz";
-  rssi_percent = (uint8_t)(((uint16_t)app->radio.status.rssi * 100U + 63U) /
-                           127U);
+  shown_rssi = radio_app_display_rssi(app);
+  rssi_percent = (uint8_t)(((uint16_t)shown_rssi * 100U + 63U) / 127U);
 
   write_rowf(ui, 1U, ANSI_CYAN "%s" ANSI_RESET, border);
   write_rowf(ui, 2U,
@@ -740,7 +766,7 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
              "RSSI:%03u/127 %3u%%  GLOS:%02u/15",
              frequency_range, radio_spacing_khz(&app->settings),
              app->radio.status.bler_a,
-             app->radio.status.bler_b, app->radio.status.rssi, rssi_percent,
+             app->radio.status.bler_b, shown_rssi, rssi_percent,
              app->settings.volume);
   write_rowf(ui, 16U, ANSI_CYAN "%s" ANSI_RESET, border);
   write_rowf(ui, 17U,
@@ -784,7 +810,7 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
   write_rowf(ui, 35U,
              ANSI_DIM "  Flash: %s%s%s   Zapis po 3 s bez zmian.   "
              "Terminal: 115200 8N1, ANSI/VT100, UTF-8   "
-             "Redraw: tylko zmiany." ANSI_RESET,
+             "Pelny redraw: co 5 s." ANSI_RESET,
              app->settings_dirty ? ANSI_YELLOW : ANSI_GREEN,
              app->settings_dirty ? "OCZEKUJE"
                                  : (app->last_save_ok ? "OK" : "BLAD"),

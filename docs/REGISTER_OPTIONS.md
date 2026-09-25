@@ -1,8 +1,11 @@
 # Opcje RDA5807M
 
-Implementacja opiera się na `RDA5807M-extended.pdf` znajdującym się w repozytorium. Rejestry są składane przez maski bitowe; kod nie używa pól bitowych C, których kolejność zależy od kompilatora.
+Implementacja opiera sie na
+[`datasheets/RDA5807M-extended.pdf`](datasheets/RDA5807M-extended.pdf).
+Rejestry sa skladane przez maski bitowe; kod nie uzywa pol bitowych C, ktorych
+kolejnosc zalezy od kompilatora.
 
-## Ustawienia dostępne dla użytkownika
+## Pola obslugiwane przez firmware
 
 | Rejestr | Bity | Ustawienie | Zakres w interfejsie |
 |---:|---:|---|---|
@@ -13,8 +16,8 @@ Implementacja opiera się na `RDA5807M-extended.pdf` znajdującym się w repozyt
 | 0x02 | 3 | RDS | wył. / wł. |
 | 0x02 | 2 | new method | wył. / wł. |
 | 0x03 | 15:6 | kanał | wyliczony z częstotliwości |
-| 0x03 | 3:2 | pasmo | 87–108, 76–91, 76–108, 50/65–76 MHz |
-| 0x03 | 1:0 | odstęp | 100, 200, 50, 25 kHz |
+| 0x03 | 3:2 | pasmo | dobierane automatycznie z baz 50/76/87 MHz |
+| 0x03 | 1:0 | odstep | dobierany automatycznie: 25/50/100/200 kHz |
 | 0x04 | 13 | RBDS | RDS / RBDS |
 | 0x04 | 11 | deemfaza | 50 / 75 µs |
 | 0x04 | 9 | soft mute | wył. / wł. |
@@ -25,14 +28,29 @@ Implementacja opiera się na `RDA5807M-extended.pdf` znajdującym się w repozyt
 | 0x05 | 5:4 | prąd LNA | 1,8 / 2,1 / 2,5 / 3,0 mA |
 | 0x05 | 3:0 | głośność | 0…15 |
 | 0x07 | 14:10 | próg soft blend | 0…31, jednostka 2 dB wg dokumentacji |
-| 0x07 | 9 | dolna granica pasma 3 | 50 / 65 MHz |
+| 0x07 | 9 | dolna granica pasma 3 | automatycznie 50 MHz dla dolnego zakresu |
 | 0x07 | 7:2 | stary próg seek | 0…63 |
 | 0x07 | 1 | soft blend | wył. / wł. |
 | 0x0B | 15:9 | RSSI | surowy kod logarytmiczny 0…127 |
 
-Terminal przyjmuje częstotliwość z pełnego, udokumentowanego zakresu syntezera `50–115 MHz` i sam dobiera `BAND`, bit bazy 50/65 MHz oraz `SPACE`. Pole `CHAN[9:0]` jest sprawdzane przed zapisem. Opcjonalny tryb eksperymentalny pozwala wykorzystać pełne równanie kodowe BAND0: `87 MHz + CHAN × SPACE`, czyli maksymalnie `87 MHz + 1023 × 200 kHz = 291,6 MHz`. Ta wartość nie jest deklarowanym przez producenta zakresem RF.
+Oba interfejsy przyjmuja czestotliwosc z zakresu `50-115 MHz` i same dobieraja
+`BAND`, bit bazy 50/65 MHz oraz `SPACE`. Pole `CHAN[9:0]` jest sprawdzane przed
+zapisem. Opcjonalny tryb eksperymentalny pozwala wykorzystac pelne rownanie
+kodowe BAND0: `87 MHz + CHAN * SPACE`, czyli maksymalnie
+`87 MHz + 1023 * 200 kHz = 291,6 MHz`. Ta wartosc nie jest deklarowanym przez
+producenta zakresem RF.
 
 Dokumentacja nie definiuje przeliczenia `RSSI[6:0]` na dBm ani dBµV, dlatego interfejs nie przypisuje kodowi sztucznej jednostki fizycznej.
+
+## Opcje aplikacji bez osobnego pola RDA
+
+| Opcja | Zakres | Dzialanie |
+|---|---|---|
+| `Zakres rozszerzony` | wyl./wl. | zmienia limit planera z 115 MHz na kodowe 291,6 MHz |
+| `Usrednianie RSSI` | 0,2-5,0 s, krok 0,1 s | usrednia probki statusu bez zmiany rejestrow tunera |
+| `Ruch enkodera` | 50 kHz / 100 kHz / seek / stacje | wybiera akcje obrotu na ekranie glownym |
+| `Przyciski L/P` | 50 kHz / 100 kHz / seek / stacje | wybiera niezalezna akcje PA0/PA2 |
+| `Lista stacji` | 12 wpisow | zapisuje nazwe i czestotliwosc w emulowanym EEPROM |
 
 ## Pola celowo zablokowane
 

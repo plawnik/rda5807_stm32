@@ -29,6 +29,15 @@ void radio_settings_defaults(radio_settings_t *settings) {
   settings->east_band_starts_at_65mhz = true;
   settings->automatic_tuning = true;
   settings->lcd_backlight = true;
+  settings->rssi_average_ms = 1000U;
+  settings->encoder_action = RADIO_CONTROL_TUNE_100_KHZ;
+  settings->buttons_action = RADIO_CONTROL_SEEK;
+}
+
+const char *radio_control_action_name(uint8_t action) {
+  static const char *const names[RADIO_CONTROL_ACTION_COUNT] = {
+      "Krok 50 kHz", "Krok 100 kHz", "Wyszukiwanie", "Lista stacji"};
+  return action < RADIO_CONTROL_ACTION_COUNT ? names[action] : names[0];
 }
 
 static uint8_t spacing_register_value(uint16_t requested_spacing_khz) {
@@ -198,6 +207,44 @@ void radio_settings_sanitize(radio_settings_t *settings) {
   if (settings->lcd_contrast > 127U) settings->lcd_contrast = 127U;
   if (settings->lcd_contrast < 20U) settings->lcd_contrast = 20U;
   if (settings->lcd_bias > 7U) settings->lcd_bias = 4U;
+  if (settings->rssi_average_ms < RADIO_RSSI_AVERAGE_MIN_MS) {
+    settings->rssi_average_ms = RADIO_RSSI_AVERAGE_MIN_MS;
+  }
+  if (settings->rssi_average_ms > RADIO_RSSI_AVERAGE_MAX_MS) {
+    settings->rssi_average_ms = RADIO_RSSI_AVERAGE_MAX_MS;
+  }
+  settings->rssi_average_ms = (uint16_t)(
+      ((settings->rssi_average_ms + RADIO_RSSI_AVERAGE_STEP_MS / 2U) /
+       RADIO_RSSI_AVERAGE_STEP_MS) * RADIO_RSSI_AVERAGE_STEP_MS);
+  if (settings->encoder_action >= RADIO_CONTROL_ACTION_COUNT) {
+    settings->encoder_action = RADIO_CONTROL_TUNE_100_KHZ;
+  }
+  if (settings->buttons_action >= RADIO_CONTROL_ACTION_COUNT) {
+    settings->buttons_action = RADIO_CONTROL_SEEK;
+  }
+  if (settings->station_count > RADIO_MAX_STATIONS) {
+    settings->station_count = RADIO_MAX_STATIONS;
+  }
+  for (uint8_t station = 0U; station < settings->station_count; ++station) {
+    radio_station_t *entry = &settings->stations[station];
+    const uint32_t maximum = settings->extended_tuning
+                                 ? RADIO_REGISTER_MAX_KHZ
+                                 : RADIO_SYNTH_MAX_KHZ;
+    if (entry->frequency_khz < RADIO_SYNTH_MIN_KHZ) {
+      entry->frequency_khz = RADIO_SYNTH_MIN_KHZ;
+    } else if (entry->frequency_khz > maximum) {
+      entry->frequency_khz = maximum;
+    }
+    entry->frequency_khz =
+        ((entry->frequency_khz + 25U) / 50U) * 50U;
+    for (uint8_t character = 0U;
+         character < RADIO_STATION_NAME_LENGTH; ++character) {
+      const uint8_t value = (uint8_t)entry->name[character];
+      if (value == 0U) break;
+      if (value < 0x20U || value > 0x7EU) entry->name[character] = ' ';
+    }
+    entry->name[RADIO_STATION_NAME_LENGTH] = '\0';
+  }
   if (settings->automatic_tuning) {
     radio_settings_plan_frequency(settings, (int32_t)settings->frequency_khz,
                                   radio_spacing_khz(settings));

@@ -4,13 +4,14 @@
 #include "stm32f1xx_hal.h"
 
 /*
- * Central hardware map.  The PCD8544 uses a direct, software-driven serial
- * interface; there is no I/O expander and no I2C display bus.
+ * Central hardware map.  The PCD8544 is connected directly to the MCU. Pixel
+ * drawing happens in a 504-byte RAM framebuffer and the complete frame is
+ * transferred by SPI1 TX DMA; there is no I/O expander or I2C display bus.
  */
-#define LCD_SCLK_GPIO_Port GPIOB
-#define LCD_SCLK_Pin       GPIO_PIN_6
-#define LCD_DIN_GPIO_Port  GPIOB
-#define LCD_DIN_Pin        GPIO_PIN_7
+#define LCD_SCLK_GPIO_Port GPIOA
+#define LCD_SCLK_Pin       GPIO_PIN_5  /* SPI1_SCK */
+#define LCD_DIN_GPIO_Port  GPIOA
+#define LCD_DIN_Pin        GPIO_PIN_7  /* SPI1_MOSI */
 #define LCD_DC_GPIO_Port   GPIOB
 #define LCD_DC_Pin         GPIO_PIN_8
 #define LCD_CE_GPIO_Port   GPIOB
@@ -28,6 +29,15 @@
 #define ENCODER_BUTTON_ACTIVE_STATE GPIO_PIN_RESET
 #define ENCODER_COUNTS_PER_DETENT 4
 #define ENCODER_DIRECTION         1
+
+/* Optional three-button keypad.  Each button shorts the pin to GND. */
+#define BUTTON_LEFT_GPIO_Port GPIOA
+#define BUTTON_LEFT_Pin       GPIO_PIN_0
+#define BUTTON_RIGHT_GPIO_Port GPIOA
+#define BUTTON_RIGHT_Pin       GPIO_PIN_2
+#define BUTTON_OK_GPIO_Port GPIOA
+#define BUTTON_OK_Pin       GPIO_PIN_8
+#define NAV_BUTTON_ACTIVE_STATE GPIO_PIN_RESET
 
 /* RDA5807M is connected to I2C2: PB10=SCL, PB11=SDA. */
 #define RDA5807_I2C_TIMEOUT_MS 40U

@@ -22,6 +22,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 /* USER CODE BEGIN Includes */
+#include "spi.h"
 
 /* USER CODE END Includes */
 
@@ -79,6 +80,44 @@ void HAL_MspInit(void)
   /* USER CODE BEGIN MspInit 1 */
 
   /* USER CODE END MspInit 1 */
+}
+
+void HAL_SPI_MspInit(SPI_HandleTypeDef *spi_handle)
+{
+  GPIO_InitTypeDef gpio = {0};
+
+  if (spi_handle->Instance == SPI1)
+  {
+    __HAL_RCC_SPI1_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
+    gpio.Pin = GPIO_PIN_5 | GPIO_PIN_7;
+    gpio.Mode = GPIO_MODE_AF_PP;
+    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA, &gpio);
+
+    hdma_spi1_tx.Instance = DMA1_Channel3;
+    hdma_spi1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_spi1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi1_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_spi1_tx.Init.Mode = DMA_NORMAL;
+    hdma_spi1_tx.Init.Priority = DMA_PRIORITY_MEDIUM;
+    if (HAL_DMA_Init(&hdma_spi1_tx) != HAL_OK) Error_Handler();
+
+    __HAL_LINKDMA(spi_handle, hdmatx, hdma_spi1_tx);
+  }
+}
+
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef *spi_handle)
+{
+  if (spi_handle->Instance == SPI1)
+  {
+    __HAL_RCC_SPI1_CLK_DISABLE();
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5 | GPIO_PIN_7);
+    HAL_DMA_DeInit(spi_handle->hdmatx);
+  }
 }
 
 /* USER CODE BEGIN 1 */

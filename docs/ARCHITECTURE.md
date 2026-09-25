@@ -4,10 +4,10 @@
 
 Projekt nie wymaga RTOS. Pętla działa kooperacyjnie i wykonuje krótkie zadania:
 
-1. odczyt enkodera i odbijanie przycisku;
+1. odczyt enkodera i odbijanie czterech przyciskow;
 2. parsowanie znaków odebranych przez UART w przerwaniu;
 3. odczyt statusu RDA5807M co 50 ms i dekodowanie nowych grup RDS;
-4. aktualizacja PCD8544;
+4. zlozenie obrazu PCD8544 w RAM i uruchomienie transferu SPI DMA;
 5. okresowe odświeżenie panelu VT100;
 6. odroczony zapis zmienionych ustawień.
 
@@ -20,10 +20,12 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 | `app_config` | domyślne wartości, zakresy pasm, siatka i sanityzacja |
 | `rda5807` | rejestry 0x02–0x07, tuning, seek, status 0x0A–0x0F |
 | `rds_decoder` | grupy 0A/0B, 2A/2B i 4A bez zależności od HAL |
-| `pcd8544` | bezpośredni bit-bang GPIO, framebuffer 504 B, font i grafika |
-| `input` | TIM2 jako enkoder i debouncing przycisku |
+| `pcd8544` | framebuffer 504 B, prymitywy graficzne i pełna ramka przez SPI1 TX DMA |
+| `spi` / `dma` | oficjalny STM32 HAL, SPI1 master TX i DMA1 Channel 3 |
+| `input` | TIM2 jako enkoder oraz debouncing przycisku enkodera i PA0/PA2/PA8 |
 | `radio_app` | stan aplikacji, menu i synchronizacja sprzętu |
-| `lcd_ui` | ekran główny, ikony, menu i przewijanie tekstu |
+| `lcd_ui` | ekran główny, hierarchiczne menu, stacje i przewijanie tekstu |
+| `splash_animation` | losowany ekran startu/zamykania i dekoder ramek RLE |
 | `terminal_ui` | parser VT100, bufor UART, duże cyfry i różnicowe odświeżanie wierszy |
 | `settings_store` | dwie strony Flash, sekwencja rekordu i CRC32 |
 | `uart_debug` | ograniczone długością, bezpieczne formatowanie wyjścia |
@@ -37,9 +39,30 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 - widoki dostają nowy numer rewizji;
 - konfiguracja zostaje oznaczona jako oczekująca na zapis.
 
-Terminal przekazuje żądaną częstotliwość do planera w `app_config`. Planer domyślnie ogranicza ją do `50–115 MHz`, wybiera bazę 50/76/87 MHz, `BAND` i `SPACE`, a następnie sprawdza 10-bitowe pole `CHAN`. Po włączeniu trybu eksperymentalnego poszerza `SPACE`, aż wartość zmieści się w polu, maksymalnie do kodowego limitu `291,6 MHz`. Ręczna obsługa pasm używana przez istniejący interfejs LCD pozostaje oddzielona od tej ścieżki.
+LCD i terminal przekazuja zadana czestotliwosc do tego samego planera w
+`app_config`. Planer domyslnie ogranicza ja do `50-115 MHz`, wybiera baze
+50/76/87 MHz, `BAND` i `SPACE`, a nastepnie sprawdza 10-bitowe pole `CHAN`.
+Po wlaczeniu trybu eksperymentalnego poszerza `SPACE`, az wartosc zmiesci sie
+w polu, maksymalnie do kodowego limitu `291,6 MHz`. Uzytkownik nie wybiera
+recznego pasma ani dolnej bazy.
 
-Panel terminala buduje każdy z 35 wierszy niezależnie i przechowuje 32-bitowy skrót ostatnio wysłanej wersji. W zwykłej pracy wysyłane są wyłącznie zmienione wiersze wraz z sekwencją pozycjonowania kursora. Pełne czyszczenie bufora terminala jest wykonywane tylko przy inicjalizacji albo na żądanie użytkownika.
+Panel terminala buduje kazdy z 35 wierszy niezaleznie i przechowuje 32-bitowy
+skrot ostatnio wyslanej wersji. W zwyklej pracy wysylane sa wylacznie zmienione
+wiersze wraz z sekwencja pozycjonowania kursora. Co 5 sekund firmware ponawia
+inicjalizacje/rozmiar terminala i przepisuje wszystkie wiersze w miejscu, bez
+sekwencji czyszczenia ekranu. Dzieki temu terminal uruchomiony po radiu odzyska
+pelny panel, ale nie miga.
+
+Kazda ramka LCD powstaje w `pcd8544_t.buffer`. `pcd8544_update()` wysyla dwa
+polecenia ustawienia adresu, ustawia D/C i CE, po czym zleca HAL jeden transfer
+DMA 504 bajtow. Przed modyfikacja bufora kolejny render czeka na zakonczenie
+poprzedniego DMA, wiec kontroler nigdy nie dostaje ramki zmienianej w locie.
+
+Po wlaczeniu zasilania radio startuje automatycznie i odtwarza jedna z
+wlaczonych animacji. Dlugie przytrzymanie enkodera zapisuje ustawienia, wylacza
+tuner i LCD oraz wprowadza STM32 w STOP. Dowolne kolejne nacisniecie enkodera
+budzi uklad, przywraca zegar, pokazuje animacje i inicjalizuje radio oraz oba
+interfejsy.
 
 ## Układ pamięci Flash
 
@@ -53,4 +76,10 @@ Skrypt linkera ogranicza region `FLASH` do 62 KiB. Rekord zawiera magic, wersję
 
 ## Testowalność
 
-`app_config` i `rds_decoder` nie zależą od STM32 HAL. `make test` kompiluje je natywnym GCC i sprawdza automatyczny dobór pasma, zakres podstawowy `50–115 MHz`, limit eksperymentalny `291,6 MHz`, kroki 25/50/100/200 kHz, potrójne potwierdzanie PS/RadioText, flagę A/B i czas RDS. Osobny test panelu terminalowego korzysta z atrap UART i potwierdza m.in. brak pełnego redraw, skróty klawiaturowe, poprawne przeniesienie `106.00 → 105.90` oraz użycie znaków `█` zamiast `#`. `make firmware` osobno buduje cały obraz dla Cortex-M3.
+`app_config` i `rds_decoder` nie zaleza od STM32 HAL. `make test` kompiluje je
+natywnym GCC i sprawdza automatyczny dobor pasma, zakres podstawowy
+`50-115 MHz`, limit eksperymentalny `291,6 MHz`, siatke PLL, konsensus
+segmentow PS/RadioText, filtrowanie A/B i PI oraz czas RDS. Osobny test panelu
+terminalowego korzysta z atrap UART i potwierdza brak czyszczenia ekranu,
+skroty, przejscie `106.00 -> 105.90` i uzycie pelnych blokow `█` zamiast `#`.
+`make firmware` osobno buduje caly obraz dla Cortex-M3.

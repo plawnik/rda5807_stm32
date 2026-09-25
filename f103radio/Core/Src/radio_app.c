@@ -103,6 +103,56 @@ void radio_app_set_frequency(radio_app_t *app, uint32_t frequency_khz,
   changed(app, now_ms, true, true);
 }
 
+void radio_app_set_frequency_auto(radio_app_t *app, int32_t frequency_khz,
+                                  uint16_t requested_spacing_khz,
+                                  uint32_t now_ms) {
+  uint32_t previous_frequency;
+  uint8_t previous_band;
+  uint8_t previous_spacing;
+  bool previous_east_limit;
+  bool previous_automatic;
+  if (app == NULL) return;
+  previous_frequency = app->settings.frequency_khz;
+  previous_band = app->settings.band;
+  previous_spacing = app->settings.spacing;
+  previous_east_limit = app->settings.east_band_starts_at_65mhz;
+  previous_automatic = app->settings.automatic_tuning;
+  radio_settings_plan_frequency(&app->settings, frequency_khz,
+                                requested_spacing_khz);
+  if (app->settings.frequency_khz == previous_frequency &&
+      app->settings.band == previous_band &&
+      app->settings.spacing == previous_spacing &&
+      app->settings.east_band_starts_at_65mhz == previous_east_limit &&
+      app->settings.automatic_tuning == previous_automatic) {
+    return;
+  }
+  rds_decoder_reset_station(&app->rds);
+  changed(app, now_ms, true, true);
+}
+
+void radio_app_set_extended_tuning(radio_app_t *app, bool enabled,
+                                   uint32_t now_ms) {
+  uint32_t previous_frequency;
+  uint8_t previous_band;
+  uint8_t previous_spacing;
+  if (app == NULL || app->settings.extended_tuning == enabled) return;
+  previous_frequency = app->settings.frequency_khz;
+  previous_band = app->settings.band;
+  previous_spacing = app->settings.spacing;
+  app->settings.extended_tuning = enabled;
+  radio_settings_plan_frequency(&app->settings,
+                                (int32_t)app->settings.frequency_khz,
+                                radio_spacing_khz(&app->settings));
+  if (app->settings.frequency_khz != previous_frequency ||
+      app->settings.band != previous_band ||
+      app->settings.spacing != previous_spacing) {
+    rds_decoder_reset_station(&app->rds);
+    changed(app, now_ms, true, true);
+  } else {
+    changed(app, now_ms, false, false);
+  }
+}
+
 void radio_app_step_frequency(radio_app_t *app, int16_t detents,
                               uint32_t now_ms) {
   if (app == NULL || detents == 0) return;
@@ -206,9 +256,21 @@ void radio_app_menu_adjust(radio_app_t *app, radio_menu_item_t item,
     case RADIO_MENU_MUTE: s->muted = !s->muted; break;
     case RADIO_MENU_AUDIO_MODE: s->force_mono = !s->force_mono; break;
     case RADIO_MENU_BASS: s->bass_boost = !s->bass_boost; break;
-    case RADIO_MENU_BAND: s->band = wrap_u8((int32_t)s->band + delta, 4U); tune = true; break;
-    case RADIO_MENU_EAST_LIMIT: s->east_band_starts_at_65mhz = !s->east_band_starts_at_65mhz; tune = true; break;
-    case RADIO_MENU_SPACING: s->spacing = wrap_u8((int32_t)s->spacing + delta, 4U); tune = true; break;
+    case RADIO_MENU_BAND:
+      s->automatic_tuning = false;
+      s->band = wrap_u8((int32_t)s->band + delta, 4U);
+      tune = true;
+      break;
+    case RADIO_MENU_EAST_LIMIT:
+      s->automatic_tuning = false;
+      s->east_band_starts_at_65mhz = !s->east_band_starts_at_65mhz;
+      tune = true;
+      break;
+    case RADIO_MENU_SPACING:
+      s->automatic_tuning = false;
+      s->spacing = wrap_u8((int32_t)s->spacing + delta, 4U);
+      tune = true;
+      break;
     case RADIO_MENU_RDS: s->rds_enabled = !s->rds_enabled; break;
     case RADIO_MENU_RBDS: s->rbds_enabled = !s->rbds_enabled; break;
     case RADIO_MENU_DEEMPHASIS: s->deemphasis_50us = !s->deemphasis_50us; break;

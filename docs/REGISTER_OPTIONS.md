@@ -28,6 +28,11 @@ Implementacja opiera się na `RDA5807M-extended.pdf` znajdującym się w repozyt
 | 0x07 | 9 | dolna granica pasma 3 | 50 / 65 MHz |
 | 0x07 | 7:2 | stary próg seek | 0…63 |
 | 0x07 | 1 | soft blend | wył. / wł. |
+| 0x0B | 15:9 | RSSI | surowy kod logarytmiczny 0…127 |
+
+Terminal przyjmuje częstotliwość z pełnego, udokumentowanego zakresu syntezera `50–115 MHz` i sam dobiera `BAND`, bit bazy 50/65 MHz oraz `SPACE`. Pole `CHAN[9:0]` jest sprawdzane przed zapisem. Opcjonalny tryb eksperymentalny pozwala wykorzystać pełne równanie kodowe BAND0: `87 MHz + CHAN × SPACE`, czyli maksymalnie `87 MHz + 1023 × 200 kHz = 291,6 MHz`. Ta wartość nie jest deklarowanym przez producenta zakresem RF.
+
+Dokumentacja nie definiuje przeliczenia `RSSI[6:0]` na dBm ani dBµV, dlatego interfejs nie przypisuje kodowi sztucznej jednostki fizycznej.
 
 ## Pola celowo zablokowane
 

@@ -7,6 +7,10 @@
 typedef struct {
   char program_service[9];
   char radio_text[65];
+  char ps_candidates[8];
+  char rt_candidates[64];
+  uint8_t ps_repetitions[8];
+  uint8_t rt_repetitions[64];
   uint16_t program_id;
   uint16_t modified_julian_day;
   uint16_t ps_segments;
@@ -22,6 +26,7 @@ typedef struct {
   bool radio_text_valid;
   bool clock_valid;
   bool text_ab;
+  bool text_ab_seen;
 } rds_decoder_t;
 
 void rds_decoder_init(rds_decoder_t *decoder);

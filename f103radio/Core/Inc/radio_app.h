@@ -63,6 +63,11 @@ void radio_app_step_frequency(radio_app_t *app, int16_t detents,
                               uint32_t now_ms);
 void radio_app_set_frequency(radio_app_t *app, uint32_t frequency_khz,
                              uint32_t now_ms);
+void radio_app_set_frequency_auto(radio_app_t *app, int32_t frequency_khz,
+                                  uint16_t requested_spacing_khz,
+                                  uint32_t now_ms);
+void radio_app_set_extended_tuning(radio_app_t *app, bool enabled,
+                                   uint32_t now_ms);
 void radio_app_toggle_mute(radio_app_t *app, uint32_t now_ms);
 void radio_app_seek(radio_app_t *app, bool upwards, uint32_t now_ms);
 

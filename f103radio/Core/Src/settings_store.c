@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define SETTINGS_MAGIC 0x52414449UL /* "RADI" */
-#define SETTINGS_FORMAT_VERSION 1U
+#define SETTINGS_FORMAT_VERSION 2U
 
 typedef struct {
   uint32_t magic;

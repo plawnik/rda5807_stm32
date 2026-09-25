@@ -29,6 +29,7 @@ static void test_frequency_rules(void) {
   assert(radio_frequency_step_channels(
              &settings, 106150U, -1) == 106100U);
   settings.frequency_khz = 106125U;
+  settings.automatic_tuning = false;
   radio_settings_sanitize(&settings);
   assert(settings.frequency_khz == 106150U);
 
@@ -55,6 +56,39 @@ static void test_frequency_rules(void) {
   assert(settings.frequency_khz == 50000U);
   assert(settings.volume == 15U);
   assert(settings.spacing == RADIO_SPACING_25_KHZ);
+
+  radio_settings_defaults(&settings);
+  assert(radio_settings_plan_frequency(&settings, 49900, 50U) == 50000U);
+  assert(settings.band == RADIO_BAND_EAST);
+  assert(!settings.east_band_starts_at_65mhz);
+  assert(settings.spacing == RADIO_SPACING_50_KHZ);
+  assert(radio_settings_plan_frequency(&settings, 75950, 50U) == 75950U);
+  assert(settings.band == RADIO_BAND_EAST);
+  assert(radio_settings_plan_frequency(&settings, 76000, 50U) == 76000U);
+  assert(settings.band == RADIO_BAND_WORLD);
+  assert(radio_settings_plan_frequency(&settings, 86950, 50U) == 86950U);
+  assert(settings.band == RADIO_BAND_WORLD);
+  assert(radio_settings_plan_frequency(&settings, 87000, 100U) == 87000U);
+  assert(settings.band == RADIO_BAND_EU_US);
+  assert(radio_settings_plan_frequency(&settings, 115000, 25U) == 115000U);
+  assert(settings.spacing == RADIO_SPACING_50_KHZ);
+  assert(radio_settings_plan_frequency(&settings, 200000, 100U) == 115000U);
+  assert(radio_settings_plan_frequency(&settings, 105950, 50U) == 105950U);
+  assert(settings.automatic_tuning);
+
+  settings.extended_tuning = true;
+  assert(radio_settings_plan_frequency(&settings, 138150, 50U) == 138150U);
+  assert(settings.spacing == RADIO_SPACING_50_KHZ);
+  assert(radio_settings_plan_frequency(&settings, 138200, 50U) == 138200U);
+  assert(settings.spacing == RADIO_SPACING_100_KHZ);
+  assert(radio_settings_plan_frequency(&settings, 189400, 50U) == 189400U);
+  assert(settings.spacing == RADIO_SPACING_200_KHZ);
+  assert(radio_settings_plan_frequency(&settings, INT32_MAX, 50U) ==
+         RADIO_REGISTER_MAX_KHZ);
+  assert(settings.spacing == RADIO_SPACING_200_KHZ);
+  settings.extended_tuning = false;
+  radio_settings_sanitize(&settings);
+  assert(settings.frequency_khz == RADIO_SYNTH_MAX_KHZ);
 }
 
 static void test_program_service(void) {
@@ -65,7 +99,9 @@ static void test_program_service(void) {
   for (uint8_t segment = 0U; segment < 4U; ++segment) {
     blocks[1] = segment;
     blocks[3] = chars(name[segment * 2U], name[segment * 2U + 1U]);
-    rds_decoder_process(&decoder, blocks, 0U, 0U);
+    for (uint8_t repeat = 0U; repeat < 3U; ++repeat) {
+      rds_decoder_process(&decoder, blocks, 0U, 0U);
+    }
   }
   assert(decoder.ps_valid);
   assert(memcmp(decoder.program_service, name, 8U) == 0);
@@ -78,20 +114,37 @@ static void test_radio_text_and_ab_flag(void) {
   rds_decoder_init(&decoder);
 
   blocks[1] = (uint16_t)(2U << 12);
+  blocks[2] = chars('X', 'e'); blocks[3] = chars('l', 'l');
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
   blocks[2] = chars('H', 'e'); blocks[3] = chars('l', 'l');
+  for (uint8_t repeat = 0U; repeat < 2U; ++repeat) {
+    rds_decoder_process(&decoder, blocks, 0U, 0U);
+  }
+  assert(decoder.radio_text[0] == ' ');
   rds_decoder_process(&decoder, blocks, 0U, 0U);
   blocks[1] = (uint16_t)((2U << 12) | 1U);
   blocks[2] = chars('o', ' '); blocks[3] = chars('R', 'D');
-  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  for (uint8_t repeat = 0U; repeat < 3U; ++repeat) {
+    rds_decoder_process(&decoder, blocks, 0U, 0U);
+  }
   blocks[1] = (uint16_t)((2U << 12) | 2U);
   blocks[2] = chars('S', '!'); blocks[3] = chars('\r', ' ');
-  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  for (uint8_t repeat = 0U; repeat < 3U; ++repeat) {
+    rds_decoder_process(&decoder, blocks, 0U, 0U);
+  }
   assert(decoder.radio_text_valid);
+  assert(strcmp(decoder.radio_text, "Hello RDS!") == 0);
+
+  blocks[1] = (uint16_t)(2U << 12);
+  blocks[2] = chars('J', 'u'); blocks[3] = chars('n', 'k');
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
   assert(strcmp(decoder.radio_text, "Hello RDS!") == 0);
 
   blocks[1] = (uint16_t)((2U << 12) | (1U << 4));
   blocks[2] = chars('N', 'o'); blocks[3] = chars('w', 'y');
-  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  for (uint8_t repeat = 0U; repeat < 3U; ++repeat) {
+    rds_decoder_process(&decoder, blocks, 0U, 0U);
+  }
   assert(!decoder.radio_text_valid);
   assert(strncmp(decoder.radio_text, "Nowy", 4U) == 0);
 }

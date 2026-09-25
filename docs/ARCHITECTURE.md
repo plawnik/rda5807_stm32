@@ -37,7 +37,7 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 - widoki dostają nowy numer rewizji;
 - konfiguracja zostaje oznaczona jako oczekująca na zapis.
 
-Zmiana pasma, dolnej granicy albo kroku przechodzi przez tę samą sanityzację przed zapisem rejestrów. Dzięki temu częstotliwość widoczna w aplikacji jest już ograniczona do nowego zakresu i wyrównana do podstawy oraz kroku kanału, zanim zostanie wyliczony numer kanału RDA5807M.
+Terminal przekazuje żądaną częstotliwość do planera w `app_config`. Planer domyślnie ogranicza ją do `50–115 MHz`, wybiera bazę 50/76/87 MHz, `BAND` i `SPACE`, a następnie sprawdza 10-bitowe pole `CHAN`. Po włączeniu trybu eksperymentalnego poszerza `SPACE`, aż wartość zmieści się w polu, maksymalnie do kodowego limitu `291,6 MHz`. Ręczna obsługa pasm używana przez istniejący interfejs LCD pozostaje oddzielona od tej ścieżki.
 
 Panel terminala buduje każdy z 35 wierszy niezależnie i przechowuje 32-bitowy skrót ostatnio wysłanej wersji. W zwykłej pracy wysyłane są wyłącznie zmienione wiersze wraz z sekwencją pozycjonowania kursora. Pełne czyszczenie bufora terminala jest wykonywane tylko przy inicjalizacji albo na żądanie użytkownika.
 
@@ -53,4 +53,4 @@ Skrypt linkera ogranicza region `FLASH` do 62 KiB. Rekord zawiera magic, wersję
 
 ## Testowalność
 
-`app_config` i `rds_decoder` nie zależą od STM32 HAL. `make test` kompiluje je natywnym GCC i sprawdza zakresy częstotliwości, kroki 25/50/100/200 kHz, zmianę pasma, PS, RadioText, flagę A/B i czas RDS. Osobny test panelu terminalowego korzysta z atrap UART i potwierdza, że niezmieniony ekran nie generuje transmisji, zmiana RSSI aktualizuje tylko część wierszy, a pełne odrysowanie następuje wyłącznie na żądanie. `make firmware` osobno buduje cały obraz dla Cortex-M3.
+`app_config` i `rds_decoder` nie zależą od STM32 HAL. `make test` kompiluje je natywnym GCC i sprawdza automatyczny dobór pasma, zakres podstawowy `50–115 MHz`, limit eksperymentalny `291,6 MHz`, kroki 25/50/100/200 kHz, potrójne potwierdzanie PS/RadioText, flagę A/B i czas RDS. Osobny test panelu terminalowego korzysta z atrap UART i potwierdza m.in. brak pełnego redraw, skróty klawiaturowe, poprawne przeniesienie `106.00 → 105.90` oraz użycie znaków `█` zamiast `#`. `make firmware` osobno buduje cały obraz dla Cortex-M3.

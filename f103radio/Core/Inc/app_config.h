@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define RADIO_SYNTH_MIN_KHZ 50000U
+#define RADIO_SYNTH_MAX_KHZ 115000U
+#define RADIO_REGISTER_MAX_KHZ (87000U + (0x03FFU * 200U))
+
 typedef enum {
   RADIO_BAND_EU_US = 0,
   RADIO_BAND_JAPAN = 1,
@@ -49,6 +53,8 @@ typedef struct {
   bool new_method_enabled;
   bool seek_stop_at_band;
   bool east_band_starts_at_65mhz;
+  bool automatic_tuning;
+  bool extended_tuning;
   bool lcd_inverted;
   bool lcd_backlight;
 } radio_settings_t;
@@ -65,5 +71,8 @@ uint32_t radio_frequency_step(const radio_settings_t *settings,
 uint32_t radio_frequency_step_channels(const radio_settings_t *settings,
                                        uint32_t frequency_khz,
                                        int32_t channel_delta);
+uint32_t radio_settings_plan_frequency(radio_settings_t *settings,
+                                       int32_t frequency_khz,
+                                       uint16_t requested_spacing_khz);
 
 #endif /* APP_CONFIG_H */

@@ -60,11 +60,11 @@ DMA 504 bajtow. Przed modyfikacja bufora kolejny render czeka na zakonczenie
 poprzedniego DMA, wiec kontroler nigdy nie dostaje ramki zmienianej w locie.
 
 Po wlaczeniu zasilania radio startuje automatycznie i odtwarza jedna z
-wlaczonych animacji. Uzytkownik wybiera kompletny interfejs lokalny: enkoder
-lub trzy przyciski. Dlugie przytrzymanie aktywnego OK zapisuje ustawienia,
-wylacza tuner, USB i LCD oraz wprowadza STM32 w STOP. PB4 i PA8 pozostaja
-zrodlami wybudzenia; po wybudzeniu wracaja zegar 72/48 MHz, USB, animacja,
-radio i oba interfejsy terminala.
+wlaczonych animacji. Uzytkownik wybiera zrodlo ruchu po lokalnym UI: enkoder
+lub przyciski PA0/PA2. PB4 i PA8 zawsze dzialaja jako OK. Dlugie przytrzymanie
+ktoregokolwiek z nich zapisuje ustawienia, wylacza tuner, USB i LCD oraz
+wprowadza STM32 w STOP. Oba pozostaja zrodlami wybudzenia; po wybudzeniu
+wracaja zegar 72/48 MHz, USB, animacja, radio i oba interfejsy terminala.
 
 ## Układ pamięci Flash
 

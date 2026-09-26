@@ -1,4 +1,5 @@
 #include "app_config.h"
+#include "input_policy.h"
 #include "rds_decoder.h"
 
 #include <assert.h>
@@ -7,6 +8,39 @@
 
 static uint16_t chars(char first, char second) {
   return (uint16_t)(((uint16_t)(uint8_t)first << 8) | (uint8_t)second);
+}
+
+static void test_local_input_policy(void) {
+  input_event_t event = {
+      .rotation = 2,
+      .click = true,
+      .long_press = true,
+      .left = true,
+      .right = true,
+      .ok = true,
+      .ok_long_press = true,
+  };
+  input_event_t selected;
+
+  selected = input_event_for_mode(event, RADIO_INPUT_ENCODER);
+  assert(selected.rotation == 2);
+  assert(!selected.left);
+  assert(!selected.right);
+  assert(selected.click);
+  assert(selected.ok);
+  assert(input_event_requests_standby(selected));
+
+  selected = input_event_for_mode(event, RADIO_INPUT_BUTTONS);
+  assert(selected.rotation == 0);
+  assert(selected.left);
+  assert(selected.right);
+  assert(selected.click);
+  assert(selected.ok);
+  assert(input_event_requests_standby(selected));
+
+  event.long_press = false;
+  event.ok_long_press = false;
+  assert(!input_event_requests_standby(event));
 }
 
 static void test_frequency_rules(void) {
@@ -192,6 +226,7 @@ static void test_program_id_hysteresis(void) {
 }
 
 int main(void) {
+  test_local_input_policy();
   test_frequency_rules();
   test_program_service();
   test_radio_text_and_ab_flag();

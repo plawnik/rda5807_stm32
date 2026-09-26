@@ -1,20 +1,11 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include "input_event.h"
 #include "stm32f1xx_hal.h"
 
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef struct {
-  int16_t rotation;
-  bool click;
-  bool long_press;
-  bool left;
-  bool right;
-  bool ok;
-  bool ok_long_press;
-} input_event_t;
 
 typedef struct {
   uint32_t raw_changed_at;

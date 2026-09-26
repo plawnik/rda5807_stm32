@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "i2c.h"
 #include "input.h"
+#include "input_policy.h"
 #include "lcd_ui.h"
 #include "pcd8544.h"
 #include "radio_app.h"
@@ -83,10 +84,7 @@ int main(void) {
   while (1) {
     now_ms = HAL_GetTick();
     event = input_poll(&controls, now_ms);
-    if ((app.settings.input_mode == RADIO_INPUT_ENCODER &&
-         event.long_press) ||
-        (app.settings.input_mode == RADIO_INPUT_BUTTONS &&
-         event.ok_long_press)) {
+    if (input_event_requests_standby(event)) {
       enter_radio_standby();
       continue;
     }

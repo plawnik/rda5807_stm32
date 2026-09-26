@@ -23,7 +23,7 @@ wysyłany jednym transferem SPI1 TX DMA.
    `115200 8N1`; wybierz emulację ANSI/VT100 i kodowanie UTF-8.
 5. Radio uruchomi się automatycznie. W menu można wybrać pełne sterowanie
    enkoderem albo trzema przyciskami. Krótkie `OK` otwiera menu, a długie
-   przytrzymanie aktywnego przycisku zatwierdzającego przechodzi do standby.
+   przytrzymanie PB4 lub PA8 przechodzi do standby.
 
 Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/FLASHING.md](docs/FLASHING.md).
 
@@ -68,7 +68,7 @@ Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544
 
 ## Sterowanie lokalne
 
-| Widok | Enkoder albo PA0/PA2 | Przycisk enkodera albo PA8 | Długie przytrzymanie aktywnego OK |
+| Widok | Wybrane sterowanie kierunkiem: enkoder albo PA0/PA2 | PB4 albo PA8 | Długie przytrzymanie PB4 albo PA8 |
 |---|---|---|---|
 | Ekran główny | konfigurowalnie: krok 50/100 kHz, seek albo lista stacji | otwarcie menu | animacja i standby |
 | Menu | wybór pozycji | wejście, edycja albo wykonanie akcji | animacja i standby |
@@ -182,7 +182,7 @@ zbudować tekst niż potwierdzanie każdego znaku w izolacji.
 | `Podswietlenie` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Steruje wyjściem podświetlenia PCD8544. Wpływa na pobór prądu podświetlenia, ale nie na kontrast matrycy. |
 | `Ruch enkodera` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa działanie obrotu enkodera na ekranie głównym. |
 | `Przyciski L/P` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa niezależne działanie PA0 i PA2 na ekranie głównym. |
-| `Sterowanie` | Terminal + LCD | `Enkoder` / `3 przyciski`; domyślnie `Enkoder` | Wybiera kompletny lokalny interfejs. W trybie enkodera działają obrót i PB4, a w trybie przycisków PA0/PA2/PA8. Krótkie OK obsługuje menu, długie wyłącza radio; oba przyciski OK mogą wybudzić STM32 ze STOP. |
+| `Sterowanie` | Terminal + LCD | `Enkoder` / `3 przyciski`; domyślnie `Enkoder` | Wybiera źródło ruchu po UI: obrót enkodera albo PA0/PA2. PB4 i PA8 są zawsze aktywnymi przyciskami OK: krótki klik obsługuje menu, długie przytrzymanie wyłącza radio, a naciśnięcie wybudza STM32 ze STOP. |
 | `Stacje` | LCD | maks. 12 nazw i częstotliwości | Pozwala dodać, dostroić, edytować i usunąć wpis; lista jest zapisywana razem z konfiguracją. |
 | `Ustawienia domyslne` | Terminal + LCD | akcja | Przywraca wszystkie wartości domyślne, stroi `106,10 MHz`, czyści listę stacji i bieżące dane RDS, po czym oznacza konfigurację do zapisu w Flash. |
 

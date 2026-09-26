@@ -1,5 +1,7 @@
 #include "lcd_ui.h"
 
+#include "input_policy.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -91,21 +93,6 @@ static int16_t navigation_delta(input_event_t event) {
 
 static bool accepted(input_event_t event) {
   return event.click || event.ok;
-}
-
-static input_event_t selected_input(const radio_settings_t *settings,
-                                    input_event_t event) {
-  if (settings->input_mode == RADIO_INPUT_BUTTONS) {
-    event.rotation = 0;
-    event.click = false;
-    event.long_press = false;
-  } else {
-    event.left = false;
-    event.right = false;
-    event.ok = false;
-    event.ok_long_press = false;
-  }
-  return event;
 }
 
 static size_t visible_length(const char *text, size_t maximum) {
@@ -506,7 +493,7 @@ void lcd_ui_handle_input(lcd_ui_t *ui, radio_app_t *app,
   int16_t delta;
   bool accept;
   if (ui == NULL || app == NULL) return;
-  event = selected_input(&app->settings, event);
+  event = input_event_for_mode(event, app->settings.input_mode);
   delta = navigation_delta(event);
   accept = accepted(event);
 

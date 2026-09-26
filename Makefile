@@ -50,6 +50,7 @@ DEPS := $(OBJECTS:.o=.d)
 
 HOST_TEST_SOURCES := tests/test_main.c \
 	f103radio/Core/Src/app_config.c \
+	f103radio/Core/Src/input_policy.c \
 	f103radio/Core/Src/rds_decoder.c
 HOST_TEST := $(TEST_DIR)/test_runner
 HOST_TERMINAL_TEST_SOURCES := tests/test_terminal_ui.c \

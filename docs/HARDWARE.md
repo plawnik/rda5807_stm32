@@ -39,8 +39,8 @@ RAM, a kompletne 6 bankow po 84 bajty jest wysylane jednym transferem
 
 JTAG jest wylaczony, lecz SWD pozostaje aktywny. Dzieki temu PA15, PB3 i PB4
 sa dostepne dla enkodera. Przycisk enkodera na PB4 i osobny OK na PA8 sa
-zrodlami wybudzenia ze stanu STOP. Firmware reaguje na ten, ktory odpowiada
-wybranemu trybowi sterowania.
+zrodlami wybudzenia ze stanu STOP. Oba przyciski OK sa aktywne niezaleznie od
+wybranego zrodla ruchu po interfejsie.
 
 ## Zasilanie i poziomy
 
@@ -73,11 +73,12 @@ maja wewnetrzne podciaganie. TIM2 stosuje filtr cyfrowy 15, a wszystkie
 przyciski maja programowy debounce 25 ms. Jezeli kierunek enkodera jest
 odwrotny, zmien `ENCODER_DIRECTION` z `1` na `-1`.
 
-Trzy osobne przyciski sa pelna alternatywa dla obrotu i klikniecia enkodera.
-Opcja `Sterowanie` wybiera jeden interfejs, aby przypadkowe drgania drugiego
-nie wywolywaly akcji. PA8 dziala jako krotkie OK, dlugie wylaczenie i
-wybudzenie. Akcje lewo/prawo na ekranie glownym sa konfigurowalne niezaleznie
-od akcji obrotu enkodera.
+Trzy osobne przyciski sa pelna alternatywa dla enkodera. Opcja `Sterowanie`
+wybiera tylko zrodlo ruchu lewo/prawo: obrot enkodera albo PA0/PA2. PB4 i PA8
+pozostaja zawsze aktywne jako krotkie OK, dlugie wylaczenie oraz wybudzenie.
+Dzieki temu PA8 pozwala wejsc do menu i zmienic tryb nawet wtedy, gdy w Flash
+jest jeszcze zapisane domyslne sterowanie enkoderem. Akcje lewo/prawo na
+ekranie glownym sa konfigurowalne niezaleznie od akcji obrotu enkodera.
 
 ## USB Virtual COM Port
 

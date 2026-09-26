@@ -13,10 +13,10 @@ Napis `BRAK RADIA` oznacza brak odpowiedzi RDA5807M. Sprawdz zasilanie,
 wspolna mase, PB10/PB11 i rezystory podciagajace. Firmware ponawia wykrywanie
 modulu co 2 sekundy.
 
-Dlugie przytrzymanie aktywnego przycisku OK (PB4 dla enkodera albo PA8 dla
-trybu trzech przyciskow, okolo 0,75 s) pokazuje animacje
-zamykania, zapisuje oczekujace ustawienia, wylacza tuner i LCD, po czym usypia
-STM32 w trybie STOP. Kolejne nacisniecie PB4 albo PA8 - krotkie lub dlugie -
+Dlugie przytrzymanie PB4 albo PA8 (okolo 0,75 s) pokazuje animacje zamykania,
+zapisuje oczekujace ustawienia, wylacza tuner i LCD, po czym usypia STM32 w
+trybie STOP. Oba przyciski OK sa zawsze aktywne, niezaleznie od wybranego
+zrodla ruchu po UI. Kolejne nacisniecie PB4 albo PA8 - krotkie lub dlugie -
 budzi radio i ponownie odtwarza animacje startowa.
 
 ## Ekran glowny LCD
@@ -31,9 +31,9 @@ Na ekranie glownym:
 
 - obrot enkodera wykonuje akcje wybrana w `Sterowanie > Ruch enkodera`;
 - PA0/PA2 wykonuja akcje wybrana w `Sterowanie > Przyciski L/P`;
-- wybrany w `Sterowanie > Sterowanie` interfejs obsluguje calosc UI;
-- krotki klik enkodera albo PA8 otwiera menu;
-- dlugie przytrzymanie aktywnego OK przechodzi do standby.
+- `Sterowanie > Sterowanie` wybiera aktywne zrodlo ruchu po UI;
+- krotki klik PB4 albo PA8 zawsze otwiera i obsluguje menu;
+- dlugie przytrzymanie PB4 albo PA8 przechodzi do standby.
 
 Dostepne akcje lewo/prawo to krok 50 kHz, krok 100 kHz, seek albo przejscie
 po zapisanej liscie stacji.

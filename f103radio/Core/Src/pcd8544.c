@@ -7,6 +7,7 @@
 #include <string.h>
 
 #define PCD8544_SPI_TIMEOUT_MS 20U
+#define PCD8544_RESET_DELAY_MS 10U
 
 static pcd8544_t *active_transfer_lcd;
 
@@ -89,6 +90,12 @@ static bool send_command(pcd8544_t *lcd, uint8_t value) {
   return send_bytes(lcd, false, &value, 1U);
 }
 
+static bool update_blocking(pcd8544_t *lcd) {
+  static const uint8_t home_commands[] = {0x40U, 0x80U};
+  return send_bytes(lcd, false, home_commands, sizeof(home_commands)) &&
+         send_bytes(lcd, true, lcd->buffer, PCD8544_BUFFER_SIZE);
+}
+
 static void set_backlight(bool enabled) {
   GPIO_PinState state = enabled ? LCD_BACKLIGHT_ACTIVE_STATE
                                 : (LCD_BACKLIGHT_ACTIVE_STATE == GPIO_PIN_SET
@@ -103,12 +110,18 @@ void pcd8544_init(pcd8544_t *lcd, SPI_HandleTypeDef *spi, uint8_t contrast,
   memset(lcd, 0, sizeof(*lcd));
   lcd->spi = spi;
   pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
+  pin_write(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_RESET);
+  HAL_Delay(PCD8544_RESET_DELAY_MS);
   pin_write(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_RESET);
-  HAL_Delay(2U);
+  HAL_Delay(PCD8544_RESET_DELAY_MS);
   pin_write(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_SET);
+  HAL_Delay(PCD8544_RESET_DELAY_MS);
   pcd8544_configure(lcd, contrast, bias, inverted, backlight);
   pcd8544_clear(lcd);
-  pcd8544_update(lcd);
+  /* The first frame is deliberately blocking. It proves the controller can
+   * receive a complete 504-byte RAM image before DMA is used for normal UI
+   * updates and avoids racing the first splash frame during power-up. */
+  (void)update_blocking(lcd);
 }
 
 void pcd8544_configure(pcd8544_t *lcd, uint8_t contrast, uint8_t bias,
@@ -118,12 +131,16 @@ void pcd8544_configure(pcd8544_t *lcd, uint8_t contrast, uint8_t bias,
   lcd->bias = bias & 0x07U;
   lcd->inverted = inverted;
   lcd->backlight = backlight;
-  send_command(lcd, 0x21U); /* Extended instruction set. */
-  send_command(lcd, (uint8_t)(0x80U | lcd->contrast));
-  send_command(lcd, 0x06U); /* Temperature coefficient 2. */
-  send_command(lcd, (uint8_t)(0x10U | lcd->bias));
-  send_command(lcd, 0x20U); /* Basic set, horizontal addressing. */
-  send_command(lcd, inverted ? 0x0DU : 0x0CU);
+  {
+    const uint8_t commands[] = {
+        0x21U, /* Extended instruction set. */
+        (uint8_t)(0x80U | lcd->contrast),
+        0x06U, /* Temperature coefficient 2. */
+        (uint8_t)(0x10U | lcd->bias),
+        0x20U, /* Basic set, horizontal addressing. */
+        inverted ? 0x0DU : 0x0CU};
+    (void)send_bytes(lcd, false, commands, sizeof(commands));
+  }
   set_backlight(backlight);
 }
 
@@ -144,7 +161,9 @@ bool pcd8544_update(pcd8544_t *lcd) {
     lcd->transfer_active = false;
     lcd->transfer_error = true;
     pin_write(LCD_CE_GPIO_Port, LCD_CE_Pin, GPIO_PIN_SET);
-    return false;
+    /* Keep the display useful even if DMA could not be started. */
+    (void)HAL_SPI_Abort(lcd->spi);
+    return update_blocking(lcd);
   }
   return true;
 }

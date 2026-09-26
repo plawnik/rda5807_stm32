@@ -42,7 +42,8 @@ static const radio_menu_item_t reception_items[] = {
 static const radio_menu_item_t rds_items[] = {
     RADIO_MENU_RDS, RADIO_MENU_RBDS};
 static const radio_menu_item_t control_items[] = {
-    RADIO_MENU_ENCODER_ACTION, RADIO_MENU_BUTTON_ACTION};
+    RADIO_MENU_INPUT_MODE, RADIO_MENU_ENCODER_ACTION,
+    RADIO_MENU_BUTTON_ACTION};
 static const radio_menu_item_t display_items[] = {
     RADIO_MENU_LCD_CONTRAST, RADIO_MENU_LCD_INVERT,
     RADIO_MENU_LCD_BACKLIGHT};
@@ -90,6 +91,21 @@ static int16_t navigation_delta(input_event_t event) {
 
 static bool accepted(input_event_t event) {
   return event.click || event.ok;
+}
+
+static input_event_t selected_input(const radio_settings_t *settings,
+                                    input_event_t event) {
+  if (settings->input_mode == RADIO_INPUT_BUTTONS) {
+    event.rotation = 0;
+    event.click = false;
+    event.long_press = false;
+  } else {
+    event.left = false;
+    event.right = false;
+    event.ok = false;
+    event.ok_long_press = false;
+  }
+  return event;
 }
 
 static size_t visible_length(const char *text, size_t maximum) {
@@ -242,11 +258,23 @@ static void render_home(lcd_ui_t *ui, const radio_app_t *app,
   }
 
   if (rds->ps_valid) memcpy(source, rds->program_service, 8U);
-  else strcpy(source, "FM RADIO");
+  else strcpy(source, "FM");
   title_length = visible_length(source, 8U);
-  x = (int16_t)((PCD8544_WIDTH - title_length * 6U) / 2U);
+  /* Leave fixed status cells on both sides of the station name. */
+  x = (int16_t)(10 + (56 - title_length * 6U) / 2U);
   pcd8544_text(ui->lcd, x, 0, source, 1U, true);
   if (status->rds_synchronized) pcd8544_text(ui->lcd, 0, 0, "R", 1U, true);
+  if (app->settings.bass_boost) {
+    /* Pixel-art speaker and two bass-wave pixels, 8 x 8 px. */
+    pcd8544_fill_rect(ui->lcd, 68, 3, 2, 3, true);
+    pcd8544_line(ui->lcd, 70, 3, 73, 1, true);
+    pcd8544_line(ui->lcd, 70, 5, 73, 7, true);
+    pcd8544_line(ui->lcd, 73, 1, 73, 7, true);
+    pcd8544_set_pixel(ui->lcd, 75, 2, true);
+    pcd8544_set_pixel(ui->lcd, 76, 3, true);
+    pcd8544_set_pixel(ui->lcd, 76, 5, true);
+    pcd8544_set_pixel(ui->lcd, 75, 6, true);
+  }
   if (app->radio.operation != RDA5807_OPERATION_IDLE) {
     pcd8544_text(ui->lcd, 78, 0, ">", 1U, true);
   }
@@ -478,6 +506,7 @@ void lcd_ui_handle_input(lcd_ui_t *ui, radio_app_t *app,
   int16_t delta;
   bool accept;
   if (ui == NULL || app == NULL) return;
+  event = selected_input(&app->settings, event);
   delta = navigation_delta(event);
   accept = accepted(event);
 

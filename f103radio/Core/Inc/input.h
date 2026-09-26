@@ -13,6 +13,7 @@ typedef struct {
   bool left;
   bool right;
   bool ok;
+  bool ok_long_press;
 } input_event_t;
 
 typedef struct {
@@ -29,6 +30,9 @@ typedef struct {
   bool stable_pressed;
   bool long_press_reported;
   bool ignore_encoder_release;
+  uint32_t ok_pressed_at;
+  bool ok_long_press_reported;
+  bool ignore_ok_release;
   input_button_state_t left_button;
   input_button_state_t right_button;
   input_button_state_t ok_button;

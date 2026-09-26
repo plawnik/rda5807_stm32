@@ -5,7 +5,7 @@
 Projekt nie wymaga RTOS. Pętla działa kooperacyjnie i wykonuje krótkie zadania:
 
 1. odczyt enkodera i odbijanie czterech przyciskow;
-2. parsowanie znaków odebranych przez UART w przerwaniu;
+2. parsowanie znaków odebranych przez USART1 lub USB CDC w przerwaniu;
 3. odczyt statusu RDA5807M co 50 ms i dekodowanie nowych grup RDS;
 4. zlozenie obrazu PCD8544 w RAM i uruchomienie transferu SPI DMA;
 5. okresowe odświeżenie panelu VT100;
@@ -26,9 +26,10 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 | `radio_app` | stan aplikacji, menu i synchronizacja sprzętu |
 | `lcd_ui` | ekran główny, hierarchiczne menu, stacje i przewijanie tekstu |
 | `splash_animation` | losowany ekran startu/zamykania i dekoder ramek RLE |
-| `terminal_ui` | parser VT100, bufor UART, duże cyfry i różnicowe odświeżanie wierszy |
+| `terminal_ui` | wspólny parser VT100 dla UART/USB, duże cyfry i różnicowe odświeżanie wierszy |
 | `settings_store` | dwie strony Flash, sekwencja rekordu i CRC32 |
-| `uart_debug` | ograniczone długością, bezpieczne formatowanie wyjścia |
+| `uart_debug` | bezpieczne formatowanie i równoległe wysyłanie przez USART1 oraz USB CDC |
+| `USB_DEVICE` | oficjalny stos ST USB Device/CDC, deskryptory i most do terminala |
 
 ## Przepływ stanu
 
@@ -59,10 +60,11 @@ DMA 504 bajtow. Przed modyfikacja bufora kolejny render czeka na zakonczenie
 poprzedniego DMA, wiec kontroler nigdy nie dostaje ramki zmienianej w locie.
 
 Po wlaczeniu zasilania radio startuje automatycznie i odtwarza jedna z
-wlaczonych animacji. Dlugie przytrzymanie enkodera zapisuje ustawienia, wylacza
-tuner i LCD oraz wprowadza STM32 w STOP. Dowolne kolejne nacisniecie enkodera
-budzi uklad, przywraca zegar, pokazuje animacje i inicjalizuje radio oraz oba
-interfejsy.
+wlaczonych animacji. Uzytkownik wybiera kompletny interfejs lokalny: enkoder
+lub trzy przyciski. Dlugie przytrzymanie aktywnego OK zapisuje ustawienia,
+wylacza tuner, USB i LCD oraz wprowadza STM32 w STOP. PB4 i PA8 pozostaja
+zrodlami wybudzenia; po wybudzeniu wracaja zegar 72/48 MHz, USB, animacja,
+radio i oba interfejsy terminala.
 
 ## Układ pamięci Flash
 

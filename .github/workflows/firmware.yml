@@ -57,17 +57,17 @@ jobs:
           Commit: ${GITHUB_SHA}
 
           Paczka ZIP zawiera BIN, HEX, ELF, mapę linkera, instrukcję wgrywania i sumy SHA-256.
-          Poprzednie automatyczne wydanie zostało zastąpione tym buildem.
+          Poprzednie wydania pozostają dostępne w historii Releases.
           EOF
 
-      - name: Replace latest release
+      - name: Publish versioned release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete firmware-latest --cleanup-tag --yes || true
+          tag="firmware-build-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::8}"
           archive="$(find release -maxdepth 1 -name 'rda5807_stm32-*.zip' -print -quit)"
-          gh release create firmware-latest \
+          gh release create "${tag}" \
             "${archive}" release/SHA256SUMS.txt \
             --target "${GITHUB_SHA}" \
             --title "Firmware build #${GITHUB_RUN_NUMBER}" \

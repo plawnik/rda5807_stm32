@@ -74,7 +74,8 @@ static const uint8_t small_digits[10][5] = {
 static terminal_ui_t *active_terminal;
 
 static void initialize_terminal_session(bool clear_screen) {
-  uart_debug_write("\x1b[?1049h\x1b[8;35;112t\x1b[H\x1b[?25l\x1b[?7l"
+  if (clear_screen) uart_debug_write("\x1b[?1049h");
+  uart_debug_write("\x1b[8;35;112t\x1b[H\x1b[?25l\x1b[?7l"
                    "\x1b]0;RDA5807 STM32\x07");
   if (clear_screen) uart_debug_write("\x1b[2J\x1b[H");
 }
@@ -108,6 +109,7 @@ static const radio_menu_item_t terminal_menu_items[] = {
     RADIO_MENU_LCD_BACKLIGHT,
     RADIO_MENU_ENCODER_ACTION,
     RADIO_MENU_BUTTON_ACTION,
+    RADIO_MENU_INPUT_MODE,
     RADIO_MENU_DEFAULTS};
 
 #define TERMINAL_MENU_ITEM_COUNT \
@@ -491,7 +493,10 @@ static void build_frequency_row(const terminal_ui_t *ui,
                     1U);
     }
     if (selected) {
-      append_text(output, output_size, &position, ANSI_BRIGHT_WHITE);
+      /* Reset both foreground and background. Setting only white foreground
+       * leaves ANSI_DIGIT's yellow background active for every later glyph. */
+      append_text(output, output_size, &position,
+                  ANSI_RESET ANSI_BRIGHT_WHITE);
     }
     append_repeat(output, output_size, &position, ' ', 1U);
     visible += 6U;
@@ -633,15 +638,22 @@ void terminal_ui_reset(terminal_ui_t *ui, uint32_t now_ms) {
 }
 
 void terminal_ui_uart_rx_complete(UART_HandleTypeDef *uart) {
-  uint8_t next;
   terminal_ui_t *ui = active_terminal;
   if (ui == NULL || uart != ui->uart) return;
-  next = (uint8_t)((ui->rx_head + 1U) & (TERMINAL_RX_BUFFER_SIZE - 1U));
-  if (next != ui->rx_tail) {
-    ui->rx_buffer[ui->rx_head] = ui->rx_byte;
+  terminal_ui_receive_bytes(&ui->rx_byte, 1U);
+  HAL_UART_Receive_IT(ui->uart, &ui->rx_byte, 1U);
+}
+
+void terminal_ui_receive_bytes(const uint8_t *data, size_t length) {
+  terminal_ui_t *ui = active_terminal;
+  if (ui == NULL || data == NULL) return;
+  while (length-- > 0U) {
+    const uint8_t next =
+        (uint8_t)((ui->rx_head + 1U) & (TERMINAL_RX_BUFFER_SIZE - 1U));
+    if (next == ui->rx_tail) break;
+    ui->rx_buffer[ui->rx_head] = *data++;
     ui->rx_head = next;
   }
-  HAL_UART_Receive_IT(ui->uart, &ui->rx_byte, 1U);
 }
 
 void terminal_ui_uart_error(UART_HandleTypeDef *uart) {
@@ -809,8 +821,8 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
   }
   write_rowf(ui, 35U,
              ANSI_DIM "  Flash: %s%s%s   Zapis po 3 s bez zmian.   "
-             "Terminal: 115200 8N1, ANSI/VT100, UTF-8   "
-             "Pelny redraw: co 5 s." ANSI_RESET,
+             "Terminal: UART/USB CDC, ANSI/VT100, UTF-8   "
+             "Synchronizacja bez CLS: co 5 s." ANSI_RESET,
              app->settings_dirty ? ANSI_YELLOW : ANSI_GREEN,
              app->settings_dirty ? "OCZEKUJE"
                                  : (app->last_save_ok ? "OK" : "BLAD"),

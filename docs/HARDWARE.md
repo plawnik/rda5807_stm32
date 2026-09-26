@@ -32,12 +32,15 @@ RAM, a kompletne 6 bankow po 84 bajty jest wysylane jednym transferem
 | PCD8544 | LIGHT | PB13 | GPIO output / sterowanie tranzystorem |
 | Adapter USB-UART | RX | PA9 | USART1 TX, 115200 8N1 |
 | Adapter USB-UART | TX | PA10 | USART1 RX, 115200 8N1 |
+| USB FS | D- | PA11 | natywny USB device / CDC ACM |
+| USB FS | D+ | PA12 | natywny USB device / CDC ACM, pull-up 1,5 kOhm |
 | ST-Link | SWDIO | PA13 | debug/programowanie |
 | ST-Link | SWCLK | PA14 | debug/programowanie |
 
 JTAG jest wylaczony, lecz SWD pozostaje aktywny. Dzieki temu PA15, PB3 i PB4
-sa dostepne dla enkodera. Przycisk enkodera na PB4 jest zrodlem wybudzenia ze
-stanu STOP.
+sa dostepne dla enkodera. Przycisk enkodera na PB4 i osobny OK na PA8 sa
+zrodlami wybudzenia ze stanu STOP. Firmware reaguje na ten, ktory odpowiada
+wybranemu trybowi sterowania.
 
 ## Zasilanie i poziomy
 
@@ -52,7 +55,8 @@ stanu STOP.
 
 ## PCD8544 i DMA
 
-SPI1 pracuje tylko jako nadajnik, w trybie 0, MSB first, z zegarem 2,25 MHz.
+SPI1 pracuje tylko jako nadajnik, w trybie 0, MSB first, z konserwatywnym
+zegarem 1,125 MHz.
 DMA1 Channel 3 czyta bezposrednio bufor `pcd8544_t.buffer[504]`. Funkcje
 rysujace nigdy nie wysylaja pojedynczych pikseli do wyswietlacza. Modyfikuja
 wylacznie framebuffer, a `pcd8544_update()` ustawia adres X/Y na poczatek i
@@ -69,9 +73,24 @@ maja wewnetrzne podciaganie. TIM2 stosuje filtr cyfrowy 15, a wszystkie
 przyciski maja programowy debounce 25 ms. Jezeli kierunek enkodera jest
 odwrotny, zmien `ENCODER_DIRECTION` z `1` na `-1`.
 
-Trzy osobne przyciski sa alternatywa dla obrotu i klikniecia enkodera. Ich
-akcje lewo/prawo na ekranie glownym sa konfigurowalne niezaleznie od akcji
-obrotu enkodera.
+Trzy osobne przyciski sa pelna alternatywa dla obrotu i klikniecia enkodera.
+Opcja `Sterowanie` wybiera jeden interfejs, aby przypadkowe drgania drugiego
+nie wywolywaly akcji. PA8 dziala jako krotkie OK, dlugie wylaczenie i
+wybudzenie. Akcje lewo/prawo na ekranie glownym sa konfigurowalne niezaleznie
+od akcji obrotu enkodera.
+
+## USB Virtual COM Port
+
+Natywny kontroler USB STM32 pracuje jako CDC ACM. Windows 10/11 oraz typowe
+dystrybucje Linux rozpoznaja go jako port szeregowy bez dodatkowej aplikacji.
+Ten sam panel VT100 oraz te same klawisze dzialaja jednoczesnie przez USB i
+USART1.
+
+PA11 i PA12 podlacz bezposrednio do D- i D+. USB wymaga zegara 48 MHz, ktory
+firmware uzyskuje z PLL 72 MHz przez dzielnik 1,5. Potrzebny jest rezystor
+pull-up 1,5 kOhm z D+ do 3,3 V; zwykle znajduje sie na Blue Pill. Dla wlasnej
+plytki produkcyjnej nalezy uzyc wlasnego legalnego VID/PID zamiast
+demonstracyjnej pary ST `0483:5740`.
 
 ## RDA5807M i audio
 

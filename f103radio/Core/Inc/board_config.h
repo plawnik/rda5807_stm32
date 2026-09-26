@@ -39,6 +39,12 @@
 #define BUTTON_OK_Pin       GPIO_PIN_8
 #define NAV_BUTTON_ACTIVE_STATE GPIO_PIN_RESET
 
+/* Native USB Full Speed device (CDC virtual COM port). */
+#define USB_DM_GPIO_Port GPIOA
+#define USB_DM_Pin       GPIO_PIN_11
+#define USB_DP_GPIO_Port GPIOA
+#define USB_DP_Pin       GPIO_PIN_12
+
 /* RDA5807M is connected to I2C2: PB10=SCL, PB11=SDA. */
 #define RDA5807_I2C_TIMEOUT_MS 40U
 

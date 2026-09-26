@@ -32,12 +32,19 @@ void radio_settings_defaults(radio_settings_t *settings) {
   settings->rssi_average_ms = 1000U;
   settings->encoder_action = RADIO_CONTROL_TUNE_100_KHZ;
   settings->buttons_action = RADIO_CONTROL_SEEK;
+  settings->input_mode = RADIO_INPUT_ENCODER;
 }
 
 const char *radio_control_action_name(uint8_t action) {
   static const char *const names[RADIO_CONTROL_ACTION_COUNT] = {
       "Krok 50 kHz", "Krok 100 kHz", "Wyszukiwanie", "Lista stacji"};
   return action < RADIO_CONTROL_ACTION_COUNT ? names[action] : names[0];
+}
+
+const char *radio_input_mode_name(uint8_t mode) {
+  static const char *const names[RADIO_INPUT_MODE_COUNT] = {
+      "Enkoder", "3 przyciski"};
+  return mode < RADIO_INPUT_MODE_COUNT ? names[mode] : names[0];
 }
 
 static uint8_t spacing_register_value(uint16_t requested_spacing_khz) {
@@ -221,6 +228,9 @@ void radio_settings_sanitize(radio_settings_t *settings) {
   }
   if (settings->buttons_action >= RADIO_CONTROL_ACTION_COUNT) {
     settings->buttons_action = RADIO_CONTROL_SEEK;
+  }
+  if (settings->input_mode >= RADIO_INPUT_MODE_COUNT) {
+    settings->input_mode = RADIO_INPUT_ENCODER;
   }
   if (settings->station_count > RADIO_MAX_STATIONS) {
     settings->station_count = RADIO_MAX_STATIONS;

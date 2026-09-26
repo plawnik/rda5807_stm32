@@ -13,6 +13,7 @@
 #include "terminal_ui.h"
 #include "tim.h"
 #include "usart.h"
+#include "usb_device.h"
 
 static radio_app_t app;
 static pcd8544_t lcd;
@@ -26,15 +27,19 @@ static void enter_radio_standby(void) {
   splash_play(&lcd, false);
   radio_app_power_down(&app);
   pcd8544_sleep(&lcd);
+  USB_DEVICE_DeInit();
 
   /* Ignore the press which requested shutdown. The next falling edge is the
    * wake-up request. */
   while (HAL_GPIO_ReadPin(ENCODER_BUTTON_GPIO_Port, ENCODER_BUTTON_Pin) ==
-         ENCODER_BUTTON_ACTIVE_STATE) {
+             ENCODER_BUTTON_ACTIVE_STATE ||
+         HAL_GPIO_ReadPin(BUTTON_OK_GPIO_Port, BUTTON_OK_Pin) ==
+             NAV_BUTTON_ACTIVE_STATE) {
     HAL_Delay(5U);
   }
   HAL_Delay(30U);
   __HAL_GPIO_EXTI_CLEAR_IT(ENCODER_BUTTON_Pin);
+  __HAL_GPIO_EXTI_CLEAR_IT(BUTTON_OK_Pin);
   HAL_NVIC_DisableIRQ(USART1_IRQn);
   HAL_SuspendTick();
   HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
@@ -43,6 +48,7 @@ static void enter_radio_standby(void) {
   HAL_ResumeTick();
   HAL_NVIC_SetPriority(USART1_IRQn, 1U, 0U);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
+  MX_USB_DEVICE_Init();
   pcd8544_wake(&lcd);
   splash_play(&lcd, true);
   radio_app_wake(&app, HAL_GetTick());
@@ -63,6 +69,7 @@ int main(void) {
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
+  MX_USB_DEVICE_Init();
 
   now_ms = HAL_GetTick();
   radio_app_init(&app, &hi2c2, now_ms);
@@ -76,7 +83,10 @@ int main(void) {
   while (1) {
     now_ms = HAL_GetTick();
     event = input_poll(&controls, now_ms);
-    if (event.long_press) {
+    if ((app.settings.input_mode == RADIO_INPUT_ENCODER &&
+         event.long_press) ||
+        (app.settings.input_mode == RADIO_INPUT_BUTTONS &&
+         event.ok_long_press)) {
       enter_radio_standby();
       continue;
     }
@@ -92,6 +102,7 @@ int main(void) {
 void SystemClock_Config(void) {
   RCC_OscInitTypeDef oscillator = {0};
   RCC_ClkInitTypeDef clocks = {0};
+  RCC_PeriphCLKInitTypeDef peripheral_clocks = {0};
 
   oscillator.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   oscillator.HSEState = RCC_HSE_ON;
@@ -109,6 +120,10 @@ void SystemClock_Config(void) {
   clocks.APB1CLKDivider = RCC_HCLK_DIV2;
   clocks.APB2CLKDivider = RCC_HCLK_DIV1;
   if (HAL_RCC_ClockConfig(&clocks, FLASH_LATENCY_2) != HAL_OK) Error_Handler();
+
+  peripheral_clocks.PeriphClockSelection = RCC_PERIPHCLK_USB;
+  peripheral_clocks.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
+  if (HAL_RCCEx_PeriphCLKConfig(&peripheral_clocks) != HAL_OK) Error_Handler();
 }
 
 void Error_Handler(void) {

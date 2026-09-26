@@ -37,6 +37,33 @@ static bool nav_button_poll(input_button_state_t *button, bool current,
   return false;
 }
 
+static void ok_button_poll(input_t *input, bool current, uint32_t now_ms,
+                           input_event_t *event) {
+  input_button_state_t *button = &input->ok_button;
+  if (current != button->raw_pressed) {
+    button->raw_pressed = current;
+    button->raw_changed_at = now_ms;
+  }
+  if (current != button->stable_pressed &&
+      (uint32_t)(now_ms - button->raw_changed_at) >= BUTTON_DEBOUNCE_MS) {
+    button->stable_pressed = current;
+    if (current) {
+      input->ok_pressed_at = now_ms;
+      input->ok_long_press_reported = false;
+    } else if (input->ignore_ok_release) {
+      input->ignore_ok_release = false;
+      input->ok_long_press_reported = false;
+    } else if (!input->ok_long_press_reported) {
+      event->ok = true;
+    }
+  }
+  if (button->stable_pressed && !input->ok_long_press_reported &&
+      (uint32_t)(now_ms - input->ok_pressed_at) >= BUTTON_LONG_PRESS_MS) {
+    input->ok_long_press_reported = true;
+    event->ok_long_press = true;
+  }
+}
+
 void input_init(input_t *input, TIM_HandleTypeDef *encoder_timer,
                 uint32_t now_ms) {
   if (input == NULL || encoder_timer == NULL) return;
@@ -57,6 +84,9 @@ void input_init(input_t *input, TIM_HandleTypeDef *encoder_timer,
   nav_button_init(&input->ok_button,
                   nav_button_is_pressed(BUTTON_OK_GPIO_Port, BUTTON_OK_Pin),
                   now_ms);
+  input->ok_pressed_at = now_ms;
+  input->ignore_ok_release = input->ok_button.stable_pressed;
+  input->ok_long_press_reported = input->ok_button.stable_pressed;
   __HAL_TIM_SET_COUNTER(encoder_timer, 0U);
   HAL_TIM_Encoder_Start(encoder_timer, TIM_CHANNEL_ALL);
 }
@@ -108,9 +138,9 @@ input_event_t input_poll(input_t *input, uint32_t now_ms) {
   event.right = nav_button_poll(
       &input->right_button,
       nav_button_is_pressed(BUTTON_RIGHT_GPIO_Port, BUTTON_RIGHT_Pin), now_ms);
-  event.ok = nav_button_poll(
-      &input->ok_button,
-      nav_button_is_pressed(BUTTON_OK_GPIO_Port, BUTTON_OK_Pin), now_ms);
+  ok_button_poll(input,
+                 nav_button_is_pressed(BUTTON_OK_GPIO_Port, BUTTON_OK_Pin),
+                 now_ms, &event);
   return event;
 }
 
@@ -131,5 +161,8 @@ void input_resync(input_t *input, uint32_t now_ms) {
   nav_button_init(&input->ok_button,
                   nav_button_is_pressed(BUTTON_OK_GPIO_Port, BUTTON_OK_Pin),
                   now_ms);
+  input->ok_pressed_at = now_ms;
+  input->ignore_ok_release = input->ok_button.stable_pressed;
+  input->ok_long_press_reported = input->ok_button.stable_pressed;
   __HAL_TIM_SET_COUNTER(input->encoder_timer, 0U);
 }

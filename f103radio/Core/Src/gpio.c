@@ -31,11 +31,18 @@ void MX_GPIO_Init(void) {
   config.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(ENCODER_BUTTON_GPIO_Port, &config);
 
-  config.Pin = BUTTON_LEFT_Pin | BUTTON_RIGHT_Pin | BUTTON_OK_Pin;
+  config.Pin = BUTTON_LEFT_Pin | BUTTON_RIGHT_Pin;
   config.Mode = GPIO_MODE_INPUT;
   config.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &config);
 
+  config.Pin = BUTTON_OK_Pin;
+  config.Mode = GPIO_MODE_IT_FALLING;
+  config.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(BUTTON_OK_GPIO_Port, &config);
+
   HAL_NVIC_SetPriority(EXTI4_IRQn, 2U, 0U);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2U, 0U);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }

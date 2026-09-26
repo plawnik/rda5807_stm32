@@ -13,23 +13,27 @@ Napis `BRAK RADIA` oznacza brak odpowiedzi RDA5807M. Sprawdz zasilanie,
 wspolna mase, PB10/PB11 i rezystory podciagajace. Firmware ponawia wykrywanie
 modulu co 2 sekundy.
 
-Dlugie przytrzymanie przycisku enkodera (okolo 0,75 s) pokazuje animacje
+Dlugie przytrzymanie aktywnego przycisku OK (PB4 dla enkodera albo PA8 dla
+trybu trzech przyciskow, okolo 0,75 s) pokazuje animacje
 zamykania, zapisuje oczekujace ustawienia, wylacza tuner i LCD, po czym usypia
-STM32 w trybie STOP. Kolejne nacisniecie enkodera - krotkie lub dlugie - budzi
-radio i ponownie odtwarza animacje startowa.
+STM32 w trybie STOP. Kolejne nacisniecie PB4 albo PA8 - krotkie lub dlugie -
+budzi radio i ponownie odtwarza animacje startowa.
 
 ## Ekran glowny LCD
 
 Ekran pokazuje czestotliwosc, RDS PS/RadioText, stereo/mono, stan strojenia,
-glosnosc i usredniony kod RSSI. Kod RSSI ma zakres `0...127`; nie jest wartoscia
+glosnosc i usredniony kod RSSI. Po wlaczeniu `Podbicie basu` w prawym gornym
+polu pojawia sie maly piktogram glosnika z fala basowa. Kod RSSI ma zakres
+`0...127`; nie jest wartoscia
 w dBm ani dBi.
 
 Na ekranie glownym:
 
 - obrot enkodera wykonuje akcje wybrana w `Sterowanie > Ruch enkodera`;
 - PA0/PA2 wykonuja akcje wybrana w `Sterowanie > Przyciski L/P`;
-- krotki klik enkodera lub PA8 otwiera menu;
-- dlugie przytrzymanie enkodera przechodzi do standby.
+- wybrany w `Sterowanie > Sterowanie` interfejs obsluguje calosc UI;
+- krotki klik enkodera albo PA8 otwiera menu;
+- dlugie przytrzymanie aktywnego OK przechodzi do standby.
 
 Dostepne akcje lewo/prawo to krok 50 kHz, krok 100 kHz, seek albo przejscie
 po zapisanej liscie stacji.
@@ -46,7 +50,7 @@ krotki klik enkodera albo PA8 zatwierdza.
 | `Dzwiek` | glosnosc, mute, mono/stereo, bass, deemfaza |
 | `Odbior` | algorytm/progi seek, usrednianie RSSI, soft mute/blend, AFC, LNA |
 | `RDS` | dekoder RDS i wybor RDS/RBDS |
-| `Sterowanie` | osobna akcja enkodera i przyciskow lewo/prawo |
+| `Sterowanie` | wybor enkoder / trzy przyciski oraz osobna akcja lewo/prawo |
 | `Ekran` | kontrast, negatyw i podswietlenie |
 | `Stacje` | dodawanie, strojenie, edycja i usuwanie stacji |
 | `System` | ustawienia domyslne |
@@ -67,9 +71,12 @@ Po wybraniu zapisanej stacji mozna ja odtworzyc, zmienic czestotliwosc, zmienic
 nazwe albo usunac. Przy akcji `Lista stacji` ruch lewo/prawo przechodzi po
 pozycjach cyklicznie.
 
-## Terminal ANSI/VT100
+## Terminal ANSI/VT100 przez UART i USB
 
-Ustaw port na `115200 8N1`, bez kontroli przeplywu, ANSI/VT100 i UTF-8.
+Panel jest nadawany jednoczesnie przez USART1 (PA9/PA10) i natywny USB CDC
+(PA11/PA12). Ustaw port na `115200 8N1`, bez kontroli przeplywu, ANSI/VT100 i
+UTF-8. Parametry ustawione dla USB CDC sa informacyjne, ale `115200 8N1`
+ulatwia zachowanie identycznej konfiguracji obu polaczen.
 Zalecany rozmiar to 112 kolumn i 35 wierszy. Firmware wysyla polecenie zmiany
 rozmiaru, ale nie kazdy emulator terminala je honoruje; w takim programie
 rozszerz okno recznie.

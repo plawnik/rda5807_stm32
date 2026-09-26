@@ -378,7 +378,7 @@ const char *radio_app_menu_label(radio_menu_item_t item) {
       "Soft blend", "Prog soft blend", "AFC", "Nowy demodulator",
       "Wejscie LNA", "Prad LNA", "Kontrast LCD", "Negatyw LCD",
       "Podswietlenie", "Ruch enkodera", "Przyciski L/P",
-      "Ustawienia domyslne"};
+      "Sterowanie", "Ustawienia domyslne"};
   return item < RADIO_MENU_COUNT ? labels[item] : "?";
 }
 
@@ -437,6 +437,9 @@ void radio_app_menu_value(const radio_app_t *app, radio_menu_item_t item,
     case RADIO_MENU_BUTTON_ACTION:
       snprintf(buffer, buffer_size, "%s",
                radio_control_action_name(s->buttons_action)); break;
+    case RADIO_MENU_INPUT_MODE:
+      snprintf(buffer, buffer_size, "%s",
+               radio_input_mode_name(s->input_mode)); break;
     case RADIO_MENU_DEFAULTS: snprintf(buffer, buffer_size, "nacisnij"); break;
     default: break;
   }
@@ -516,6 +519,11 @@ void radio_app_menu_adjust(radio_app_t *app, radio_menu_item_t item,
     case RADIO_MENU_BUTTON_ACTION:
       s->buttons_action = wrap_u8((int32_t)s->buttons_action + delta,
                                   RADIO_CONTROL_ACTION_COUNT);
+      update_radio = false;
+      break;
+    case RADIO_MENU_INPUT_MODE:
+      s->input_mode = wrap_u8((int32_t)s->input_mode + delta,
+                              RADIO_INPUT_MODE_COUNT);
       update_radio = false;
       break;
     default: return;

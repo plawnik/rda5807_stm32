@@ -9,6 +9,16 @@ static uint32_t clear_sequences;
 static uint32_t cursor_sequences;
 static uint32_t solid_block_sequences;
 static uint32_t hash_characters;
+static uint32_t alternate_screen_sequences;
+static uint32_t yellow_digit_sequences;
+static uint32_t yellow_digit_resets;
+
+static bool bytes_equal(const uint8_t *data, uint16_t size, uint16_t index,
+                        const char *sequence) {
+  const size_t length = strlen(sequence);
+  return index + length <= size &&
+         memcmp(&data[index], sequence, length) == 0;
+}
 
 static void inspect_sequences(const uint8_t *data, uint16_t size) {
   for (uint16_t index = 0U; index < size; ++index) {
@@ -16,6 +26,15 @@ static void inspect_sequences(const uint8_t *data, uint16_t size) {
     if (index + 2U < size && data[index] == 0xE2U &&
         data[index + 1U] == 0x96U && data[index + 2U] == 0x88U) {
       ++solid_block_sequences;
+    }
+    if (bytes_equal(data, size, index, "\x1b[?1049h")) {
+      ++alternate_screen_sequences;
+    }
+    if (bytes_equal(data, size, index, "\x1b[30;43m")) {
+      ++yellow_digit_sequences;
+    }
+    if (bytes_equal(data, size, index, "\x1b[0m\x1b[97m")) {
+      ++yellow_digit_resets;
     }
   }
   for (uint16_t index = 0U; index + 3U < size; ++index) {
@@ -181,6 +200,9 @@ static void test_incremental_render(void) {
   cursor_sequences = 0U;
   solid_block_sequences = 0U;
   hash_characters = 0U;
+  alternate_screen_sequences = 0U;
+  yellow_digit_sequences = 0U;
+  yellow_digit_resets = 0U;
 
   terminal_ui_init(&ui, &uart, 0U);
   terminal_ui_render(&ui, &app, 100U);
@@ -191,6 +213,7 @@ static void test_incremental_render(void) {
   assert(first_cursors == TERMINAL_SCREEN_ROWS);
   assert(solid_block_sequences > 0U);
   assert(hash_characters == 0U);
+  assert(alternate_screen_sequences == 1U);
 
   terminal_ui_render(&ui, &app, 200U);
   assert(transmitted_bytes == first_size);
@@ -211,6 +234,18 @@ static void test_incremental_render(void) {
    * reintroduce the visible flash which the incremental renderer avoids. */
   assert(clear_sequences == first_clears);
   assert(cursor_sequences - first_cursors == TERMINAL_SCREEN_ROWS);
+
+  queue_key(&ui, 'P');
+  terminal_ui_process(&ui, &app, 500U);
+  terminal_ui_render(&ui, &app, 500U);
+  assert(yellow_digit_sequences == 7U);
+  assert(yellow_digit_resets == yellow_digit_sequences);
+
+  /* The 5-second recovery redraw may resize and repaint, but must not clear
+   * or re-enter the alternate buffer because either operation visibly flashes. */
+  terminal_ui_render(&ui, &app, 5600U);
+  assert(clear_sequences == first_clears);
+  assert(alternate_screen_sequences == 1U);
 }
 
 static void test_modes_and_shortcuts(void) {

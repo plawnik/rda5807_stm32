@@ -3,7 +3,10 @@
 [![Firmware](https://github.com/plawnik/rda5807_stm32/actions/workflows/firmware.yml/badge.svg)](https://github.com/plawnik/rda5807_stm32/actions/workflows/firmware.yml)
 [![Latest release](https://img.shields.io/github/v/release/plawnik/rda5807_stm32?display_name=release&label=firmware)](https://github.com/plawnik/rda5807_stm32/releases/latest)
 
-Odbiornik FM zbudowany na `STM32F103C8T6` i `RDA5807M`. Obsługuje enkoder z przyciskiem, wyświetlacz Nokia `PCD8544` 84×48, RDS, zapis ustawień w pamięci Flash oraz kolorowy panel sterowania w terminalu ANSI/VT100.
+Odbiornik FM zbudowany na `STM32F103C8T6` i `RDA5807M`. Obsługuje enkoder
+albo trzy osobne przyciski, wyświetlacz Nokia `PCD8544` 84×48, RDS, zapis
+ustawień w pamięci Flash oraz kolorowy panel ANSI/VT100 dostępny jednocześnie
+przez USART1 i natywny USB Virtual COM Port.
 
 PCD8544 jest podłączony **bezpośrednio do STM32**. Projekt nie używa
 ekspandera: grafika powstaje w 504-bajtowym buforze RAM, a cały ekran jest
@@ -16,9 +19,11 @@ wysyłany jednym transferem SPI1 TX DMA.
 1. Pobierz ZIP z gotowym firmware z sekcji [Releases](https://github.com/plawnik/rda5807_stm32/releases/latest).
 2. Wgraj `rda5807_stm32.hex` albo `rda5807_stm32.bin` przez ST-Link.
 3. Podłącz moduł zgodnie z tabelą poniżej.
-4. Ustaw terminal na `115200 8N1`, emulację ANSI/VT100 i kodowanie UTF-8.
-5. Radio uruchomi się automatycznie. Krótki klik enkodera otwiera menu, a
-   długie przytrzymanie pokazuje animację zamykania i przechodzi do standby.
+4. Otwórz port `RDA5807 STM32 Radio` przez USB albo USART1 ustawiony na
+   `115200 8N1`; wybierz emulację ANSI/VT100 i kodowanie UTF-8.
+5. Radio uruchomi się automatycznie. W menu można wybrać pełne sterowanie
+   enkoderem albo trzema przyciskami. Krótkie `OK` otwiera menu, a długie
+   przytrzymanie aktywnego przycisku zatwierdzającego przechodzi do standby.
 
 Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/FLASHING.md](docs/FLASHING.md).
 
@@ -42,6 +47,8 @@ Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/
 | PCD8544 LIGHT | PB13 | wyjście | w razie większego prądu użyj tranzystora |
 | UART TX | PA9 | wyjście | USART1, 115200 8N1 |
 | UART RX | PA10 | wejście | USART1, poziomy 3,3 V |
+| USB D− | PA11 | I/O | natywny USB Full Speed / Virtual COM Port |
+| USB D+ | PA12 | I/O | wymagany pull-up 1,5 kΩ do 3,3 V, często jest już na płytce |
 | SWDIO / SWCLK | PA13 / PA14 | I/O | programowanie i debugowanie |
 
 Domyślne piny są zebrane w jednym miejscu: [`board_config.h`](f103radio/Core/Inc/board_config.h). Szczegóły elektryczne i uwagi o zasilaniu są w [docs/HARDWARE.md](docs/HARDWARE.md).
@@ -54,14 +61,14 @@ Ekran główny zawiera:
 - częstotliwość w MHz, zawsze z trzema miejscami po przecinku;
 - poziom głośności i stan wyciszenia;
 - surowy poziom RSSI `0…127` oraz informację, czy układ rozpoznał stację FM;
-- stereo/mono, synchronizację RDS i stan strojenia;
+- stereo/mono, synchronizację RDS, stan strojenia i piktogram Bass Boost;
 - przewijany RadioText albo typ programu i kod PI.
 
 Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544 są zapisane po polsku bez znaków diakrytycznych, ponieważ w pamięci mikrokontrolera znajduje się mała czcionka ASCII. Terminal używa pełnego UTF-8.
 
 ## Sterowanie lokalne
 
-| Widok | Obrót / PA0-PA2 | Klik enkodera / PA8 | Długie przytrzymanie enkodera |
+| Widok | Enkoder albo PA0/PA2 | Przycisk enkodera albo PA8 | Długie przytrzymanie aktywnego OK |
 |---|---|---|---|
 | Ekran główny | konfigurowalnie: krok 50/100 kHz, seek albo lista stacji | otwarcie menu | animacja i standby |
 | Menu | wybór pozycji | wejście, edycja albo wykonanie akcji | animacja i standby |
@@ -78,8 +85,10 @@ Panel terminalowy ma układ 112×35 znaków. W górnej części pokazuje zbudowa
 
 Ekran nie jest okresowo czyszczony. Firmware wylicza skrót każdego wiersza i
 za pomocą pozycjonowania kursora VT100 wysyła tylko wiersze, których treść się
-zmieniła. Co 5 sekund ponawia inicjalizację terminala i przepisuje panel w
-miejscu, dzięki czemu Putty uruchomiony po radiu odzyska widok bez migania.
+zmieniła. Co 5 sekund ponawia ustawienie rozmiaru i ukrycie kursora, po czym
+przepisuje panel w miejscu, ale nie wysyła `CLS` ani ponownie nie przełącza
+bufora terminala. Dzięki temu PuTTY uruchomiony po radiu odzyska widok bez
+migania.
 `R` wymusza takie samo bezpieczne przerysowanie.
 
 | Klawisz | Działanie |
@@ -173,6 +182,7 @@ zbudować tekst niż potwierdzanie każdego znaku w izolacji.
 | `Podswietlenie` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Steruje wyjściem podświetlenia PCD8544. Wpływa na pobór prądu podświetlenia, ale nie na kontrast matrycy. |
 | `Ruch enkodera` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa działanie obrotu enkodera na ekranie głównym. |
 | `Przyciski L/P` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa niezależne działanie PA0 i PA2 na ekranie głównym. |
+| `Sterowanie` | Terminal + LCD | `Enkoder` / `3 przyciski`; domyślnie `Enkoder` | Wybiera kompletny lokalny interfejs. W trybie enkodera działają obrót i PB4, a w trybie przycisków PA0/PA2/PA8. Krótkie OK obsługuje menu, długie wyłącza radio; oba przyciski OK mogą wybudzić STM32 ze STOP. |
 | `Stacje` | LCD | maks. 12 nazw i częstotliwości | Pozwala dodać, dostroić, edytować i usunąć wpis; lista jest zapisywana razem z konfiguracją. |
 | `Ustawienia domyslne` | Terminal + LCD | akcja | Przywraca wszystkie wartości domyślne, stroi `106,10 MHz`, czyści listę stacji i bieżące dane RDS, po czym oznacza konfigurację do zapisu w Flash. |
 
@@ -208,17 +218,17 @@ make firmware   # ELF, HEX, BIN i MAP w build/firmware
 make ci         # testy i firmware, tak samo jak GitHub Actions
 ```
 
-STM32CubeIDE nadal może otworzyć plik [`f103radio.ioc`](f103radio/f103radio.ioc), ale głównym, powtarzalnym systemem budowania jest repozytoryjny `Makefile`. Repo zawiera oficjalny STM32CubeF1 `v1.8.7`; dokładne piny commitów HAL/CMSIS są w [`f103radio/Drivers/VERSIONS.md`](f103radio/Drivers/VERSIONS.md).
+STM32CubeIDE nadal może otworzyć plik [`f103radio.ioc`](f103radio/f103radio.ioc), ale głównym, powtarzalnym systemem budowania jest repozytoryjny `Makefile`. Repo zawiera oficjalny STM32CubeF1 `v1.8.7`, HAL oraz oficjalny stos USB Device CDC ST; dokładne piny commitów są w [`f103radio/Drivers/VERSIONS.md`](f103radio/Drivers/VERSIONS.md).
 
 ## CI/CD i wydania
 
 Każdy push i pull request uruchamia testy oraz kompilację dla Cortex-M3. Push do `main` dodatkowo:
 
 1. tworzy ZIP z plikami `.bin`, `.hex`, `.elf`, `.map`, instrukcją programowania i sumami SHA-256;
-2. usuwa poprzednie automatyczne wydanie `firmware-latest`;
-3. publikuje nowe wydanie jako [Latest Release](https://github.com/plawnik/rda5807_stm32/releases/latest).
+2. tworzy unikalny tag `firmware-build-<run>-<sha>` bez usuwania wcześniejszych wydań;
+3. oznacza nowe wydanie jako [Latest Release](https://github.com/plawnik/rda5807_stm32/releases/latest).
 
-W repozytorium pozostaje więc jedno aktualne automatyczne wydanie, a numer buildu i SHA commita znajdują się w opisie oraz w paczce.
+Pełna historia paczek pozostaje na stronie [Releases](https://github.com/plawnik/rda5807_stm32/releases), a numer buildu i SHA commita znajdują się w opisie każdej z nich.
 
 ## Dokumentacja
 
@@ -234,5 +244,6 @@ W repozytorium pozostaje więc jedno aktualne automatyczne wydanie, a numer buil
 
 - Wszystkie sygnały logiczne pracują z poziomem `3,3 V`.
 - I²C wymaga zewnętrznych rezystorów podciągających, typowo `4,7 kΩ` do 3,3 V.
+- USB wymaga linii PA11/PA12 oraz pull-up `1,5 kΩ` na D+; większość płytek Blue Pill ma go na PCB, ale jego wartość warto sprawdzić.
 - Podświetlenia nie wolno zasilać z GPIO, jeśli jego prąd przekracza bezpieczny prąd pinu — użyj tranzystora i rezystora.
 - Po wgraniu sprawdź najpierw komunikację I²C i obraz LCD, a dopiero później tor audio.

@@ -14,6 +14,10 @@ MCU_FLAGS := -mcpu=cortex-m3 -mthumb
 DEFINES := -DUSE_HAL_DRIVER -DSTM32F103xB
 INCLUDES := \
 	-If103radio/Core/Inc \
+	-If103radio/USB_DEVICE/App \
+	-If103radio/USB_DEVICE/Target \
+	-If103radio/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
+	-If103radio/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
 	-If103radio/Drivers/STM32F1xx_HAL_Driver/Inc \
 	-If103radio/Drivers/STM32F1xx_HAL_Driver/Inc/Legacy \
 	-If103radio/Drivers/CMSIS/Device/ST/STM32F1xx/Include \
@@ -31,7 +35,13 @@ LDFLAGS := $(MCU_FLAGS) --specs=nano.specs --specs=nosys.specs \
 
 CORE_SOURCES := $(wildcard f103radio/Core/Src/*.c)
 HAL_SOURCES := $(wildcard f103radio/Drivers/STM32F1xx_HAL_Driver/Src/*.c)
-C_SOURCES := $(CORE_SOURCES) $(HAL_SOURCES)
+USB_APP_SOURCES := $(wildcard f103radio/USB_DEVICE/App/*.c) \
+	$(wildcard f103radio/USB_DEVICE/Target/*.c)
+USB_MIDDLEWARE_SOURCES := \
+	$(wildcard f103radio/Middlewares/ST/STM32_USB_Device_Library/Core/Src/*.c) \
+	$(wildcard f103radio/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/*.c)
+C_SOURCES := $(CORE_SOURCES) $(HAL_SOURCES) $(USB_APP_SOURCES) \
+	$(USB_MIDDLEWARE_SOURCES)
 ASM_SOURCES := f103radio/Core/Startup/startup_stm32f103c8tx.s
 C_OBJECTS := $(patsubst %.c,$(FIRMWARE_DIR)/%.o,$(C_SOURCES))
 ASM_OBJECTS := $(patsubst %.s,$(FIRMWARE_DIR)/%.o,$(ASM_SOURCES))

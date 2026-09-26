@@ -5,6 +5,7 @@
 #include "stm32f1xx_hal.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define TERMINAL_RX_BUFFER_SIZE 128U
@@ -46,5 +47,6 @@ void terminal_ui_render(terminal_ui_t *ui, const radio_app_t *app,
                         uint32_t now_ms);
 void terminal_ui_uart_rx_complete(UART_HandleTypeDef *uart);
 void terminal_ui_uart_error(UART_HandleTypeDef *uart);
+void terminal_ui_receive_bytes(const uint8_t *data, size_t length);
 
 #endif /* TERMINAL_UI_H */

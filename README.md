@@ -3,8 +3,8 @@
 [![Firmware](https://github.com/plawnik/rda5807_stm32/actions/workflows/firmware.yml/badge.svg)](https://github.com/plawnik/rda5807_stm32/actions/workflows/firmware.yml)
 [![Latest release](https://img.shields.io/github/v/release/plawnik/rda5807_stm32?display_name=release&label=firmware)](https://github.com/plawnik/rda5807_stm32/releases/latest)
 
-Odbiornik FM zbudowany na `STM32F103C8T6` i `RDA5807M`. Obsługuje enkoder
-albo trzy osobne przyciski, wyświetlacz Nokia `PCD8544` 84×48, RDS, zapis
+Odbiornik FM zbudowany na `STM32F103C8T6` i `RDA5807M`. Obsługuje jednocześnie
+enkoder i trzy osobne przyciski, wyświetlacz Nokia `PCD8544` 84×48, RDS, zapis
 ustawień w pamięci Flash oraz kolorowy panel ANSI/VT100 dostępny jednocześnie
 przez USART1 i natywny USB Virtual COM Port.
 
@@ -21,9 +21,9 @@ wysyłany jednym transferem SPI1 TX DMA.
 3. Podłącz moduł zgodnie z tabelą poniżej.
 4. Otwórz port `RDA5807 STM32 Radio` przez USB albo USART1 ustawiony na
    `115200 8N1`; wybierz emulację ANSI/VT100 i kodowanie UTF-8.
-5. Radio uruchomi się automatycznie. W menu można wybrać pełne sterowanie
-   enkoderem albo trzema przyciskami. Krótkie `OK` otwiera menu, a długie
-   przytrzymanie PB4 lub PA8 przechodzi do standby.
+5. Radio uruchomi się automatycznie. Enkoder oraz przyciski PA0/PA2/PA8 działają
+   równolegle. Krótkie `OK` otwiera menu, a długie przytrzymanie PB4 lub PA8
+   przechodzi do standby.
 
 Instrukcje dla STM32CubeProgrammer, `st-flash` i OpenOCD znajdują się w [docs/FLASHING.md](docs/FLASHING.md).
 
@@ -57,12 +57,18 @@ Domyślne piny są zebrane w jednym miejscu: [`board_config.h`](f103radio/Core/I
 
 Ekran główny zawiera:
 
-- nazwę stacji z RDS PS;
-- częstotliwość w MHz, zawsze z trzema miejscami po przecinku;
-- poziom głośności i stan wyciszenia;
-- surowy poziom RSSI `0…127` oraz informację, czy układ rozpoznał stację FM;
-- stereo/mono, synchronizację RDS, stan strojenia i piktogram Bass Boost;
-- przewijany RadioText albo typ programu i kod PI.
+- boczny, ośmiostopniowy wskaźnik sygnału oraz RSSI przeskalowane na `00…99`;
+- boczny wskaźnik głośności `0…15`, głośnik lub znak wyciszenia;
+- częstotliwość `50.00MHz…291.60MHz` bez nieznaczącego zera z przodu;
+- nazwę wpisu z zapisanej listy stacji albo `FM`;
+- ikonę RDS, skróconą nazwę PS i PTY oraz stabilny RadioText w dwóch wierszach;
+- datę `DD MMM` i czas `HH:MM` po pierwszej synchronizacji CT z RDS;
+- aktualną akcję ostatnio użytego sterowania: `TUNE`, `SEEK` albo `STACJA`;
+- jedną z dwóch grafik pixel-art zmienianych co 30 s, kiedy nie ma RDS.
+
+Zegar RTC STM32 jest taktowany z LSI, działa także w STOP i jest okresowo
+korygowany czasem CT. Dzięki temu nie wymaga kwarcu 32,768 kHz, ale dokładność
+między synchronizacjami zależy od niedokładnego oscylatora LSI.
 
 Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544 są zapisane po polsku bez znaków diakrytycznych, ponieważ w pamięci mikrokontrolera znajduje się mała czcionka ASCII. Terminal używa pełnego UTF-8.
 
@@ -77,7 +83,7 @@ zawiera również gotowy 504-bajtowy bufor stron PCD8544.
 
 ## Sterowanie lokalne
 
-| Widok | Wybrane sterowanie kierunkiem: enkoder albo PA0/PA2 | PB4 albo PA8 | Długie przytrzymanie PB4 albo PA8 |
+| Widok | Enkoder i PA0/PA2 — zawsze równolegle | PB4 albo PA8 | Długie przytrzymanie PB4 albo PA8 |
 |---|---|---|---|
 | Ekran główny | konfigurowalnie: krok 50/100 kHz, seek albo lista stacji | otwarcie menu | animacja i standby |
 | Menu | wybór pozycji | wejście, edycja albo wykonanie akcji | animacja i standby |
@@ -191,7 +197,6 @@ zbudować tekst niż potwierdzanie każdego znaku w izolacji.
 | `Podswietlenie` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Steruje wyjściem podświetlenia PCD8544. Wpływa na pobór prądu podświetlenia, ale nie na kontrast matrycy. |
 | `Ruch enkodera` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa działanie obrotu enkodera na ekranie głównym. |
 | `Przyciski L/P` | Terminal + LCD | krok 50/100 kHz, seek, lista stacji | Określa niezależne działanie PA0 i PA2 na ekranie głównym. |
-| `Sterowanie` | Terminal + LCD | `Enkoder` / `3 przyciski`; domyślnie `Enkoder` | Wybiera źródło ruchu po UI: obrót enkodera albo PA0/PA2. PB4 i PA8 są zawsze aktywnymi przyciskami OK: krótki klik obsługuje menu, długie przytrzymanie wyłącza radio, a naciśnięcie wybudza STM32 ze STOP. |
 | `Stacje` | LCD | maks. 12 nazw i częstotliwości | Pozwala dodać, dostroić, edytować i usunąć wpis; lista jest zapisywana razem z konfiguracją. |
 | `Ustawienia domyslne` | Terminal + LCD | akcja | Przywraca wszystkie wartości domyślne, stroi `106,10 MHz`, czyści listę stacji i bieżące dane RDS, po czym oznacza konfigurację do zapisu w Flash. |
 

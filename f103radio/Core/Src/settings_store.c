@@ -91,7 +91,7 @@ _Static_assert(sizeof(radio_settings_v2_t) ==
                    offsetof(radio_settings_t, rssi_average_ms),
                "Version 2 settings must match the current prefix");
 _Static_assert(sizeof(radio_settings_v3_t) ==
-                   offsetof(radio_settings_t, input_mode),
+                   offsetof(radio_settings_t, reserved_input_mode),
                "Version 3 settings must match the current prefix");
 
 uint32_t settings_store_crc32(const void *data, uint32_t length) {

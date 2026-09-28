@@ -32,19 +32,13 @@ void radio_settings_defaults(radio_settings_t *settings) {
   settings->rssi_average_ms = 1000U;
   settings->encoder_action = RADIO_CONTROL_TUNE_100_KHZ;
   settings->buttons_action = RADIO_CONTROL_SEEK;
-  settings->input_mode = RADIO_INPUT_ENCODER;
+  settings->reserved_input_mode = 0U;
 }
 
 const char *radio_control_action_name(uint8_t action) {
   static const char *const names[RADIO_CONTROL_ACTION_COUNT] = {
       "Krok 50 kHz", "Krok 100 kHz", "Wyszukiwanie", "Lista stacji"};
   return action < RADIO_CONTROL_ACTION_COUNT ? names[action] : names[0];
-}
-
-const char *radio_input_mode_name(uint8_t mode) {
-  static const char *const names[RADIO_INPUT_MODE_COUNT] = {
-      "Enkoder", "3 przyciski"};
-  return mode < RADIO_INPUT_MODE_COUNT ? names[mode] : names[0];
 }
 
 static uint8_t spacing_register_value(uint16_t requested_spacing_khz) {
@@ -229,9 +223,7 @@ void radio_settings_sanitize(radio_settings_t *settings) {
   if (settings->buttons_action >= RADIO_CONTROL_ACTION_COUNT) {
     settings->buttons_action = RADIO_CONTROL_SEEK;
   }
-  if (settings->input_mode >= RADIO_INPUT_MODE_COUNT) {
-    settings->input_mode = RADIO_INPUT_ENCODER;
-  }
+  settings->reserved_input_mode = 0U;
   if (settings->station_count > RADIO_MAX_STATIONS) {
     settings->station_count = RADIO_MAX_STATIONS;
   }
@@ -262,4 +254,79 @@ void radio_settings_sanitize(radio_settings_t *settings) {
     settings->frequency_khz = radio_frequency_clamp(
         settings, (int32_t)settings->frequency_khz);
   }
+}
+
+uint8_t radio_station_step_index(const radio_settings_t *settings,
+                                 uint32_t current_frequency_khz,
+                                 bool active_index_valid,
+                                 uint8_t active_index,
+                                 int16_t direction) {
+  uint8_t index;
+  uint16_t remaining;
+  bool base_found = false;
+
+  if (settings == NULL || settings->station_count == 0U || direction == 0) {
+    return 0U;
+  }
+
+  if (active_index_valid && active_index < settings->station_count) {
+    index = active_index;
+    base_found = true;
+  } else {
+    index = 0U;
+    for (uint8_t station = 0U; station < settings->station_count; ++station) {
+      if (settings->stations[station].frequency_khz == current_frequency_khz) {
+        index = station;
+        base_found = true;
+        break;
+      }
+    }
+  }
+
+  /* When the current frequency is not stored, the first movement selects the
+   * closest saved station in the requested frequency direction.  Subsequent
+   * movements continue cyclically in the user-defined list order. */
+  if (!base_found) {
+    bool directional_match = false;
+    uint32_t best_frequency = direction > 0 ? UINT32_MAX : 0U;
+    for (uint8_t station = 0U; station < settings->station_count; ++station) {
+      const uint32_t frequency = settings->stations[station].frequency_khz;
+      if (direction > 0 && frequency > current_frequency_khz &&
+          frequency < best_frequency) {
+        best_frequency = frequency;
+        index = station;
+        directional_match = true;
+      } else if (direction < 0 && frequency < current_frequency_khz &&
+                 frequency >= best_frequency) {
+        best_frequency = frequency;
+        index = station;
+        directional_match = true;
+      }
+    }
+    if (!directional_match) {
+      best_frequency = direction > 0 ? UINT32_MAX : 0U;
+      for (uint8_t station = 0U; station < settings->station_count; ++station) {
+        const uint32_t frequency = settings->stations[station].frequency_khz;
+        if ((direction > 0 && frequency < best_frequency) ||
+            (direction < 0 && frequency >= best_frequency)) {
+          best_frequency = frequency;
+          index = station;
+        }
+      }
+    }
+    remaining = (uint16_t)(direction > 0 ? direction : -(int32_t)direction);
+    if (remaining > 0U) --remaining;
+  } else {
+    remaining = (uint16_t)(direction > 0 ? direction : -(int32_t)direction);
+  }
+
+  while (remaining-- != 0U) {
+    if (direction > 0) {
+      index = (uint8_t)((index + 1U) % settings->station_count);
+    } else {
+      index = index == 0U ? (uint8_t)(settings->station_count - 1U)
+                          : (uint8_t)(index - 1U);
+    }
+  }
+  return index;
 }

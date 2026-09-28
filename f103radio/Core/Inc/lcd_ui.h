@@ -27,12 +27,15 @@ typedef struct {
   uint32_t last_render_ms;
   uint32_t rendered_revision;
   uint32_t station_frequency_khz;
+  uint32_t logo_slot;
   uint8_t configured_contrast;
   uint8_t configured_bias;
   uint8_t category;
   uint8_t selected;
   uint8_t station_index;
   uint8_t name_cursor;
+  uint8_t home_action;
+  uint8_t logo_variant;
   char station_name[RADIO_STATION_NAME_LENGTH + 1U];
   bool station_is_new;
   bool delete_confirmed;

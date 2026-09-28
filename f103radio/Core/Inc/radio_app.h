@@ -42,7 +42,6 @@ typedef enum {
   RADIO_MENU_LCD_BACKLIGHT,
   RADIO_MENU_ENCODER_ACTION,
   RADIO_MENU_BUTTON_ACTION,
-  RADIO_MENU_INPUT_MODE,
   RADIO_MENU_DEFAULTS,
   RADIO_MENU_COUNT
 } radio_menu_item_t;
@@ -94,6 +93,7 @@ bool radio_app_station_delete(radio_app_t *app, uint8_t index,
                               uint32_t now_ms);
 bool radio_app_station_tune(radio_app_t *app, uint8_t index,
                             uint32_t now_ms);
+const radio_station_t *radio_app_current_station(const radio_app_t *app);
 bool radio_app_flush_settings(radio_app_t *app);
 void radio_app_power_down(radio_app_t *app);
 void radio_app_wake(radio_app_t *app, uint32_t now_ms);

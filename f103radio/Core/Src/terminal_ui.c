@@ -109,7 +109,6 @@ static const radio_menu_item_t terminal_menu_items[] = {
     RADIO_MENU_LCD_BACKLIGHT,
     RADIO_MENU_ENCODER_ACTION,
     RADIO_MENU_BUTTON_ACTION,
-    RADIO_MENU_INPUT_MODE,
     RADIO_MENU_DEFAULTS};
 
 #define TERMINAL_MENU_ITEM_COUNT \

@@ -1,6 +1,6 @@
 #include "lcd_ui.h"
 
-#include "input_policy.h"
+#include "radio_clock.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -44,8 +44,7 @@ static const radio_menu_item_t reception_items[] = {
 static const radio_menu_item_t rds_items[] = {
     RADIO_MENU_RDS, RADIO_MENU_RBDS};
 static const radio_menu_item_t control_items[] = {
-    RADIO_MENU_INPUT_MODE, RADIO_MENU_ENCODER_ACTION,
-    RADIO_MENU_BUTTON_ACTION};
+    RADIO_MENU_ENCODER_ACTION, RADIO_MENU_BUTTON_ACTION};
 static const radio_menu_item_t display_items[] = {
     RADIO_MENU_LCD_CONTRAST, RADIO_MENU_LCD_INVERT,
     RADIO_MENU_LCD_BACKLIGHT};
@@ -65,18 +64,6 @@ static const lcd_category_t categories[LCD_CATEGORY_COUNT] = {
     {"System", system_items, sizeof(system_items) / sizeof(system_items[0])},
     {"Wyjscie", NULL, 0U}};
 
-static const uint8_t compact_digits[10][5] = {
-    {0x07U, 0x05U, 0x05U, 0x05U, 0x07U},
-    {0x02U, 0x06U, 0x02U, 0x02U, 0x07U},
-    {0x07U, 0x01U, 0x07U, 0x04U, 0x07U},
-    {0x07U, 0x01U, 0x07U, 0x01U, 0x07U},
-    {0x05U, 0x05U, 0x07U, 0x01U, 0x01U},
-    {0x07U, 0x04U, 0x07U, 0x01U, 0x07U},
-    {0x07U, 0x04U, 0x07U, 0x05U, 0x07U},
-    {0x07U, 0x01U, 0x01U, 0x01U, 0x01U},
-    {0x07U, 0x05U, 0x07U, 0x05U, 0x07U},
-    {0x07U, 0x05U, 0x07U, 0x01U, 0x07U}};
-
 static uint8_t wrap_position(int32_t value, uint8_t count) {
   if (count == 0U) return 0U;
   while (value < 0) value += count;
@@ -85,10 +72,12 @@ static uint8_t wrap_position(int32_t value, uint8_t count) {
 }
 
 static int16_t navigation_delta(input_event_t event) {
-  if (event.rotation != 0) return event.rotation;
-  if (event.left && !event.right) return -1;
-  if (event.right && !event.left) return 1;
-  return 0;
+  int32_t delta = event.rotation;
+  if (event.left) --delta;
+  if (event.right) ++delta;
+  if (delta > INT16_MAX) return INT16_MAX;
+  if (delta < INT16_MIN) return INT16_MIN;
+  return (int16_t)delta;
 }
 
 static bool accepted(input_event_t event) {
@@ -152,90 +141,270 @@ static void draw_list_label(pcd8544_t *lcd, int16_t y, const char *label,
   }
 }
 
-static void frequency_digits(uint32_t frequency_khz, char digits[7]) {
-  if (frequency_khz > 999999U) frequency_khz = 999999U;
-  for (int8_t index = 5; index >= 0; --index) {
-    digits[index] = (char)('0' + (frequency_khz % 10U));
-    frequency_khz /= 10U;
+#define TINY_GLYPH(a, b, c, d) \
+  ((uint16_t)(((uint16_t)(a) << 9) | ((uint16_t)(b) << 6) | \
+              ((uint16_t)(c) << 3) | (uint16_t)(d)))
+
+static const uint16_t tiny_digits[10] = {
+    TINY_GLYPH(7, 5, 5, 7), TINY_GLYPH(2, 6, 2, 7),
+    TINY_GLYPH(6, 1, 2, 7), TINY_GLYPH(6, 1, 3, 6),
+    TINY_GLYPH(5, 5, 7, 1), TINY_GLYPH(7, 4, 3, 6),
+    TINY_GLYPH(3, 4, 7, 7), TINY_GLYPH(7, 1, 2, 2),
+    TINY_GLYPH(7, 5, 7, 7), TINY_GLYPH(7, 7, 1, 6)};
+
+static const uint16_t tiny_letters[26] = {
+    TINY_GLYPH(2, 5, 7, 5), TINY_GLYPH(6, 5, 6, 7),
+    TINY_GLYPH(3, 4, 4, 3), TINY_GLYPH(6, 5, 5, 6),
+    TINY_GLYPH(7, 6, 4, 7), TINY_GLYPH(7, 6, 4, 4),
+    TINY_GLYPH(3, 4, 5, 3), TINY_GLYPH(5, 5, 7, 5),
+    TINY_GLYPH(7, 2, 2, 7), TINY_GLYPH(1, 1, 5, 2),
+    TINY_GLYPH(5, 6, 6, 5), TINY_GLYPH(4, 4, 4, 7),
+    TINY_GLYPH(5, 7, 7, 5), TINY_GLYPH(5, 7, 7, 5),
+    TINY_GLYPH(7, 5, 5, 7), TINY_GLYPH(7, 5, 7, 4),
+    TINY_GLYPH(7, 5, 7, 1), TINY_GLYPH(6, 5, 6, 5),
+    TINY_GLYPH(7, 4, 3, 6), TINY_GLYPH(7, 2, 2, 2),
+    TINY_GLYPH(5, 5, 5, 7), TINY_GLYPH(5, 5, 5, 2),
+    TINY_GLYPH(5, 7, 7, 5), TINY_GLYPH(5, 2, 2, 5),
+    TINY_GLYPH(5, 2, 2, 2), TINY_GLYPH(7, 1, 4, 7)};
+
+static uint16_t tiny_glyph(char character) {
+  if (character >= 'a' && character <= 'z') {
+    character = (char)(character - 'a' + 'A');
   }
-  digits[6] = '\0';
+  if (character >= '0' && character <= '9') {
+    return tiny_digits[(uint8_t)(character - '0')];
+  }
+  if (character >= 'A' && character <= 'Z') {
+    return tiny_letters[(uint8_t)(character - 'A')];
+  }
+  switch (character) {
+    case ':': return TINY_GLYPH(0, 2, 0, 2);
+    case '.': return TINY_GLYPH(0, 0, 0, 2);
+    case '-': return TINY_GLYPH(0, 0, 7, 0);
+    case '/': return TINY_GLYPH(1, 1, 2, 4);
+    case '_': return TINY_GLYPH(0, 0, 0, 7);
+    case '+': return TINY_GLYPH(0, 2, 7, 2);
+    default: return 0U;
+  }
 }
 
-static void draw_signal_icon(pcd8544_t *lcd, int16_t x, int16_t y,
-                             uint8_t rssi) {
-  const uint8_t bars = (uint8_t)((rssi + 25U) / 26U);
-  for (uint8_t index = 0U; index < 5U; ++index) {
-    const int16_t height = (int16_t)(2 + index);
-    pcd8544_rect(lcd, (int16_t)(x + index * 3),
-                 (int16_t)(y + 7 - height), 2, height, true);
-    if (index < bars) {
-      pcd8544_fill_rect(lcd, (int16_t)(x + index * 3),
-                        (int16_t)(y + 7 - height), 2, height, true);
-    }
-  }
+static uint8_t tiny_advance(char character) {
+  if (character == ' ') return 3U;
+  if (character == ':' || character == '.') return 2U;
+  return 4U;
 }
 
-static void draw_volume_icon(pcd8544_t *lcd, int16_t x, int16_t y,
-                             uint8_t volume, bool muted) {
-  pcd8544_fill_rect(lcd, x, (int16_t)(y + 2), 2, 4, true);
-  pcd8544_line(lcd, (int16_t)(x + 2), (int16_t)(y + 2),
-               (int16_t)(x + 5), y, true);
-  pcd8544_line(lcd, (int16_t)(x + 2), (int16_t)(y + 5),
-               (int16_t)(x + 5), (int16_t)(y + 7), true);
-  pcd8544_line(lcd, (int16_t)(x + 5), y,
-               (int16_t)(x + 5), (int16_t)(y + 7), true);
-  if (muted) {
-    pcd8544_line(lcd, (int16_t)(x + 8), (int16_t)(y + 1),
-                 (int16_t)(x + 13), (int16_t)(y + 6), true);
-    pcd8544_line(lcd, (int16_t)(x + 13), (int16_t)(y + 1),
-                 (int16_t)(x + 8), (int16_t)(y + 6), true);
-  } else {
-    const uint8_t waves = (uint8_t)((volume + 4U) / 5U);
-    for (uint8_t index = 0U; index < waves; ++index) {
-      pcd8544_line(lcd, (int16_t)(x + 8 + index * 2),
-                   (int16_t)(y + 2 - index),
-                   (int16_t)(x + 8 + index * 2),
-                   (int16_t)(y + 5 + index), true);
-    }
-  }
+static uint16_t tiny_text_width(const char *text) {
+  uint16_t width = 0U;
+  if (text == NULL || text[0] == '\0') return 0U;
+  while (*text != '\0') width = (uint16_t)(width + tiny_advance(*text++));
+  return width == 0U ? 0U : (uint16_t)(width - 1U);
 }
 
-static void draw_compact_frequency(pcd8544_t *lcd, uint32_t frequency_khz) {
-  char digits[7];
-  int16_t x = 10;
-  const int16_t y = 10;
-  frequency_digits(frequency_khz, digits);
-  for (uint8_t index = 0U; index < 6U; ++index) {
-    const uint8_t glyph = (uint8_t)(digits[index] - '0');
-    const bool leading_blank = index == 0U && digits[index] == '0';
-    if (!leading_blank) {
-      for (uint8_t row = 0U; row < 5U; ++row) {
-        for (uint8_t column = 0U; column < 3U; ++column) {
-          if ((compact_digits[glyph][row] &
-               (1U << (2U - column))) != 0U) {
-            pcd8544_fill_rect(lcd, (int16_t)(x + column * 2),
-                              (int16_t)(y + row * 2), 2, 2, true);
-          }
+static int16_t draw_tiny_text(pcd8544_t *lcd, int16_t x, int16_t y,
+                              const char *text) {
+  if (lcd == NULL || text == NULL) return x;
+  while (*text != '\0') {
+    const uint16_t glyph = tiny_glyph(*text);
+    for (uint8_t row = 0U; row < 4U; ++row) {
+      const uint8_t pixels =
+          (uint8_t)((glyph >> ((3U - row) * 3U)) & 0x07U);
+      for (uint8_t column = 0U; column < 3U; ++column) {
+        if ((pixels & (1U << (2U - column))) != 0U) {
+          pcd8544_set_pixel(lcd, (int16_t)(x + column),
+                            (int16_t)(y + row), true);
         }
       }
     }
-    x = (int16_t)(x + 7);
-    if (index == 2U) {
-      pcd8544_fill_rect(lcd, x, (int16_t)(y + 8), 2, 2, true);
-      x = (int16_t)(x + 3);
+    x = (int16_t)(x + tiny_advance(*text++));
+  }
+  return x;
+}
+
+static void draw_tiny_centered(pcd8544_t *lcd, int16_t x, int16_t y,
+                               int16_t width, const char *text) {
+  const uint16_t text_width = tiny_text_width(text);
+  const int16_t offset = text_width < (uint16_t)width
+                             ? (int16_t)((width - text_width) / 2)
+                             : 0;
+  draw_tiny_text(lcd, (int16_t)(x + offset), y, text);
+}
+
+static uint8_t scaled_rssi(uint8_t rssi) {
+  return (uint8_t)(((uint16_t)rssi * 99U + 63U) / 127U);
+}
+
+static uint8_t rssi_bar_count(uint8_t value) {
+  static const uint8_t thresholds[8] = {8U, 18U, 28U, 38U,
+                                         48U, 58U, 72U, 88U};
+  uint8_t bars = 0U;
+  while (bars < 8U && value >= thresholds[bars]) ++bars;
+  return bars;
+}
+
+static void draw_side_meter(pcd8544_t *lcd, bool right, uint8_t bars) {
+  static const uint8_t y[8] = {32U, 27U, 22U, 17U, 12U, 7U, 2U, 0U};
+  static const uint8_t height[8] = {4U, 4U, 4U, 4U, 4U, 4U, 4U, 1U};
+  static const uint8_t width[8] = {1U, 2U, 3U, 4U, 5U, 6U, 7U, 7U};
+  if (bars > 8U) bars = 8U;
+  for (uint8_t level = 0U; level < bars; ++level) {
+    const int16_t x = right ? (int16_t)(84U - width[level]) : 0;
+    pcd8544_fill_rect(lcd, x, y[level], width[level], height[level], true);
+  }
+}
+
+static void draw_signal_status_icon(pcd8544_t *lcd, bool station_valid) {
+  static const uint8_t rows[6] = {0x3EU, 0x2AU, 0x1CU,
+                                  0x08U, 0x0BU, 0x0BU};
+  for (uint8_t row = 0U; row < 6U; ++row) {
+    uint8_t pixels = rows[row];
+    if (!station_valid && row >= 4U) pixels &= (uint8_t)~0x03U;
+    for (uint8_t column = 0U; column < 6U; ++column) {
+      if ((pixels & (1U << (5U - column))) != 0U) {
+        pcd8544_set_pixel(lcd, column, (int16_t)(37U + row), true);
+      }
     }
   }
-  pcd8544_text(lcd, (int16_t)(x + 1), (int16_t)(y + 2), "MHz", 1U, true);
+}
+
+static void draw_volume_status_icon(pcd8544_t *lcd, bool muted) {
+  static const uint8_t speaker[5] = {0x02U, 0x06U, 0x06U, 0x06U, 0x02U};
+  static const uint8_t waves[5] = {0x02U, 0x01U, 0x05U, 0x01U, 0x02U};
+  static const uint8_t crossed[5] = {0x00U, 0x05U, 0x02U, 0x05U, 0x00U};
+  for (uint8_t row = 0U; row < 5U; ++row) {
+    const uint8_t right = muted ? crossed[row] : waves[row];
+    const uint8_t pixels = (uint8_t)((speaker[row] << 3) | right);
+    for (uint8_t column = 0U; column < 6U; ++column) {
+      if ((pixels & (1U << (5U - column))) != 0U) {
+        pcd8544_set_pixel(lcd, (int16_t)(78U + column),
+                          (int16_t)(38U + row), true);
+      }
+    }
+  }
+}
+
+static void draw_frequency(pcd8544_t *lcd, uint32_t frequency_khz) {
+  char text[16];
+  const uint32_t hundredths = (frequency_khz + 5U) / 10U;
+  const uint32_t whole = hundredths / 100U;
+  const uint32_t fraction = hundredths % 100U;
+  int16_t x;
+  snprintf(text, sizeof(text), "%lu.%02luMHz", (unsigned long)whole,
+           (unsigned long)fraction);
+  x = (int16_t)(10 + (64 - ((int16_t)strlen(text) * 6 - 1)) / 2);
+  pcd8544_text(lcd, x, 11, text, 1U, true);
+}
+
+static const char *short_program_type(uint8_t type) {
+  static const char *const names[32] = {
+      "",       "INFO",  "PUB",    "INFO",  "SPORT", "EDUK",
+      "TEATR",  "KULT",  "NAUKA",  "ROZR",  "POP",   "ROCK",
+      "LEKKA",  "KLAS",  "KLAS",   "INNA",  "POGODA", "GOSP",
+      "DZIECI", "SPOL",  "RELIGIA", "LIVE", "PODR",  "HOBBY",
+      "JAZZ",   "INNA",  "INNA",   "HITY",  "FOLK",  "DOK",
+      "TEST",   "ALARM"};
+  return names[type & 0x1FU];
+}
+
+static void draw_no_rds_logo(pcd8544_t *lcd, uint8_t variant) {
+  if ((variant & 1U) == 0U) {
+    pcd8544_line(lcd, 22, 39, 29, 19, true);
+    pcd8544_line(lcd, 29, 19, 36, 39, true);
+    pcd8544_line(lcd, 25, 31, 33, 31, true);
+    pcd8544_fill_rect(lcd, 28, 34, 3, 7, true);
+    pcd8544_line(lcd, 18, 23, 23, 27, true);
+    pcd8544_line(lcd, 18, 35, 23, 31, true);
+    pcd8544_line(lcd, 40, 27, 45, 23, true);
+    pcd8544_line(lcd, 40, 31, 45, 35, true);
+    draw_tiny_text(lcd, 49, 29, "FM");
+  } else {
+    pcd8544_rect(lcd, 20, 24, 44, 17, true);
+    pcd8544_line(lcd, 24, 23, 38, 19, true);
+    pcd8544_line(lcd, 38, 19, 53, 19, true);
+    pcd8544_rect(lcd, 24, 28, 13, 9, true);
+    pcd8544_line(lcd, 26, 32, 30, 29, true);
+    pcd8544_line(lcd, 30, 29, 35, 34, true);
+    pcd8544_line(lcd, 35, 34, 31, 37, true);
+    pcd8544_line(lcd, 31, 37, 26, 32, true);
+    pcd8544_line(lcd, 42, 29, 58, 29, true);
+    pcd8544_set_pixel(lcd, 47, 28, true);
+    pcd8544_fill_rect(lcd, 43, 34, 3, 4, true);
+    pcd8544_fill_rect(lcd, 49, 32, 3, 6, true);
+    pcd8544_fill_rect(lcd, 55, 30, 3, 8, true);
+  }
+}
+
+static void draw_control_mode(pcd8544_t *lcd, uint8_t action) {
+  const char *label;
+  int16_t x;
+  if (action == RADIO_CONTROL_SEEK) label = "SEEK";
+  else if (action == RADIO_CONTROL_STATIONS) label = "STACJA";
+  else label = "TUNE";
+  pcd8544_set_pixel(lcd, 13, 44, true);
+  pcd8544_fill_rect(lcd, 12, 45, 2, 2, true);
+  pcd8544_fill_rect(lcd, 11, 46, 3, 1, true);
+  pcd8544_set_pixel(lcd, 13, 47, true);
+  pcd8544_set_pixel(lcd, 71, 44, true);
+  pcd8544_fill_rect(lcd, 71, 45, 2, 2, true);
+  pcd8544_fill_rect(lcd, 71, 46, 3, 1, true);
+  pcd8544_set_pixel(lcd, 71, 47, true);
+  x = (int16_t)(11 + (63 - (int16_t)tiny_text_width(label)) / 2);
+  draw_tiny_text(lcd, x, 44, label);
+}
+
+static void draw_clock_and_date(pcd8544_t *lcd) {
+  static const char *const months[12] = {
+      "STY", "LUT", "MAR", "KWI", "MAJ", "CZE",
+      "LIP", "SIE", "WRZ", "PAZ", "LIS", "GRU"};
+  radio_clock_time_t time;
+  char text[8];
+  if (!radio_clock_read(&time) || time.month == 0U || time.month > 12U) return;
+  snprintf(text, sizeof(text), "%02u %s", time.day, months[time.month - 1U]);
+  draw_tiny_centered(lcd, 33, 1, 22, text);
+  snprintf(text, sizeof(text), "%02u:%02u", time.hour, time.minute);
+  draw_tiny_centered(lcd, 59, 1, 18, text);
+}
+
+static void draw_rds_text(pcd8544_t *lcd, const rds_decoder_t *rds,
+                          uint32_t now_ms) {
+  char ps[9] = {0};
+  char window[35] = {0};
+  char first[18] = {0};
+  char second[18] = {0};
+  const char *pty = short_program_type(rds->program_type);
+  const size_t pty_width = tiny_text_width(pty);
+  size_t length;
+
+  if (rds->ps_valid) {
+    memcpy(ps, rds->program_service, 8U);
+    draw_tiny_text(lcd, 8, 25, ps);
+  }
+  if (pty_width <= 35U) {
+    draw_tiny_text(lcd, (int16_t)(41 + 35 - pty_width), 25, pty);
+  }
+  if (!rds->radio_text_valid) return;
+  scrolling_text(window, sizeof(window), rds->radio_text, 64U, 34U, now_ms);
+  length = strnlen(window, 34U);
+  if (length > 17U) {
+    memcpy(first, window, 17U);
+    memcpy(second, &window[17], length - 17U);
+  } else {
+    memcpy(first, window, length);
+  }
+  draw_tiny_text(lcd, 8, 31, first);
+  draw_tiny_text(lcd, 8, 37, second);
 }
 
 static void render_home(lcd_ui_t *ui, const radio_app_t *app,
                         uint32_t now_ms) {
-  char line[20];
-  char source[66] = {0};
+  char text[18];
+  const radio_station_t *station;
   const rds_decoder_t *rds = &app->rds;
   const rda5807_status_t *status = &app->radio.status;
-  size_t title_length;
-  int16_t x;
+  const uint8_t rssi = scaled_rssi(radio_app_display_rssi(app));
+  const bool has_rds = status->rds_synchronized || rds->ps_valid ||
+                       rds->radio_text_valid;
+  const uint32_t logo_slot = now_ms / 30000U;
 
   if (!app->radio_available) {
     pcd8544_text(ui->lcd, 12, 7, "BRAK RADIA", 1U, true);
@@ -244,45 +413,49 @@ static void render_home(lcd_ui_t *ui, const radio_app_t *app,
     return;
   }
 
-  if (rds->ps_valid) memcpy(source, rds->program_service, 8U);
-  else strcpy(source, "FM");
-  title_length = visible_length(source, 8U);
-  /* Leave fixed status cells on both sides of the station name. */
-  x = (int16_t)(10 + (56 - title_length * 6U) / 2U);
-  pcd8544_text(ui->lcd, x, 0, source, 1U, true);
-  if (status->rds_synchronized) pcd8544_text(ui->lcd, 0, 0, "R", 1U, true);
-  if (app->settings.bass_boost) {
-    /* Pixel-art speaker and two bass-wave pixels, 8 x 8 px. */
-    pcd8544_fill_rect(ui->lcd, 68, 3, 2, 3, true);
-    pcd8544_line(ui->lcd, 70, 3, 73, 1, true);
-    pcd8544_line(ui->lcd, 70, 5, 73, 7, true);
-    pcd8544_line(ui->lcd, 73, 1, 73, 7, true);
-    pcd8544_set_pixel(ui->lcd, 75, 2, true);
-    pcd8544_set_pixel(ui->lcd, 76, 3, true);
-    pcd8544_set_pixel(ui->lcd, 76, 5, true);
-    pcd8544_set_pixel(ui->lcd, 75, 6, true);
-  }
-  if (app->radio.operation != RDA5807_OPERATION_IDLE) {
-    pcd8544_text(ui->lcd, 78, 0, ">", 1U, true);
-  }
+  draw_side_meter(ui->lcd, false, rssi_bar_count(rssi));
+  draw_side_meter(ui->lcd, true,
+                  app->settings.volume == 0U
+                      ? 0U
+                      : (uint8_t)(((uint16_t)app->settings.volume * 8U + 14U) /
+                                  15U));
+  draw_signal_status_icon(ui->lcd, status->station_valid);
+  draw_volume_status_icon(ui->lcd,
+                          app->settings.muted || app->settings.volume == 0U);
+  snprintf(text, sizeof(text), "%02u", rssi);
+  draw_tiny_centered(ui->lcd, 0, 44, 8, text);
+  snprintf(text, sizeof(text), "%u", app->settings.volume);
+  draw_tiny_centered(ui->lcd, 77, 44, 7, text);
 
-  draw_compact_frequency(ui->lcd, app->settings.frequency_khz);
-  draw_volume_icon(ui->lcd, 1, 26, app->settings.volume,
-                   app->settings.muted);
-  draw_signal_icon(ui->lcd, 26, 26, radio_app_display_rssi(app));
-  snprintf(line, sizeof(line), "%c %03u",
-           status->stereo && !app->settings.force_mono ? 'S' : 'M',
-           radio_app_display_rssi(app));
-  pcd8544_text(ui->lcd, 43, 26, line, 1U, true);
+  if (status->rds_synchronized) draw_tiny_centered(ui->lcd, 8, 1, 20, "RDS");
+  if (app->settings.bass_boost) draw_tiny_text(ui->lcd, 29, 1, "B");
+  draw_clock_and_date(ui->lcd);
 
-  if (rds->radio_text_valid || rds->rt_segments != 0U) {
-    scrolling_text(line, sizeof(line), rds->radio_text, 64U, 14U, now_ms);
+  station = radio_app_current_station(app);
+  if (station != NULL) {
+    scrolling_text(text, sizeof(text), station->name,
+                   RADIO_STATION_NAME_LENGTH, 17U, now_ms);
   } else {
-    snprintf(source, sizeof(source), "%s PI:%04X",
-             rds_program_type_name(rds->program_type), rds->program_id);
-    scrolling_text(line, sizeof(line), source, sizeof(source), 14U, now_ms);
+    strcpy(text, "FM");
   }
-  pcd8544_text(ui->lcd, 0, 40, line, 1U, true);
+  draw_tiny_centered(ui->lcd, 8, 6, 68, text);
+  draw_frequency(ui->lcd, app->settings.frequency_khz);
+
+  if (has_rds) {
+    draw_rds_text(ui->lcd, rds, now_ms);
+  } else {
+    if (ui->logo_slot != logo_slot) {
+      if (ui->logo_slot == UINT32_MAX) {
+        ui->logo_variant =
+            (uint8_t)((app->settings.frequency_khz ^ now_ms) & 1U);
+      } else {
+        ui->logo_variant ^= 1U;
+      }
+      ui->logo_slot = logo_slot;
+    }
+    draw_no_rds_logo(ui->lcd, ui->logo_variant);
+  }
+  draw_control_mode(ui->lcd, ui->home_action);
 }
 
 static void render_categories(lcd_ui_t *ui, uint32_t now_ms) {
@@ -477,6 +650,8 @@ void lcd_ui_init(lcd_ui_t *ui, pcd8544_t *lcd,
   ui->configured_bias = settings->lcd_bias;
   ui->configured_inverted = settings->lcd_inverted;
   ui->configured_backlight = settings->lcd_backlight;
+  ui->home_action = settings->encoder_action;
+  ui->logo_slot = UINT32_MAX;
 }
 
 void lcd_ui_reset(lcd_ui_t *ui) {
@@ -484,6 +659,7 @@ void lcd_ui_reset(lcd_ui_t *ui) {
   ui->screen = LCD_UI_HOME;
   ui->category = 0U;
   ui->selected = 0U;
+  ui->logo_slot = UINT32_MAX;
   ui->rendered_revision = 0U;
   ui->last_render_ms = 0U;
 }
@@ -493,21 +669,23 @@ void lcd_ui_handle_input(lcd_ui_t *ui, radio_app_t *app,
   int16_t delta;
   bool accept;
   if (ui == NULL || app == NULL) return;
-  event = input_event_for_mode(event, app->settings.input_mode);
   delta = navigation_delta(event);
   accept = accepted(event);
 
   switch (ui->screen) {
     case LCD_UI_HOME:
       if (event.rotation != 0) {
+        ui->home_action = app->settings.encoder_action;
         radio_app_control_left_right(app, app->settings.encoder_action,
                                      event.rotation, now_ms);
       }
       if (event.left) {
+        ui->home_action = app->settings.buttons_action;
         radio_app_control_left_right(app, app->settings.buttons_action,
                                      -1, now_ms);
       }
       if (event.right) {
+        ui->home_action = app->settings.buttons_action;
         radio_app_control_left_right(app, app->settings.buttons_action,
                                      1, now_ms);
       }

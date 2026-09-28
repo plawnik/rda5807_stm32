@@ -41,12 +41,6 @@ typedef enum {
   RADIO_CONTROL_ACTION_COUNT
 } radio_control_action_t;
 
-typedef enum {
-  RADIO_INPUT_ENCODER = 0,
-  RADIO_INPUT_BUTTONS,
-  RADIO_INPUT_MODE_COUNT
-} radio_input_mode_t;
-
 typedef struct {
   uint32_t frequency_khz;
   char name[RADIO_STATION_NAME_LENGTH + 1U];
@@ -88,8 +82,9 @@ typedef struct {
   uint8_t station_count;
   uint8_t reserved[3];
   radio_station_t stations[RADIO_MAX_STATIONS];
-  /* Appended in settings format 4 so format 3 records remain migratable. */
-  uint8_t input_mode;
+  /* Kept in settings format 4 for binary compatibility.  Both local input
+   * devices are now always active, so this former input selector is reserved. */
+  uint8_t reserved_input_mode;
   uint8_t reserved_v4[3];
 } radio_settings_t;
 
@@ -109,6 +104,10 @@ uint32_t radio_settings_plan_frequency(radio_settings_t *settings,
                                        int32_t frequency_khz,
                                        uint16_t requested_spacing_khz);
 const char *radio_control_action_name(uint8_t action);
-const char *radio_input_mode_name(uint8_t mode);
+uint8_t radio_station_step_index(const radio_settings_t *settings,
+                                 uint32_t current_frequency_khz,
+                                 bool active_index_valid,
+                                 uint8_t active_index,
+                                 int16_t direction);
 
 #endif /* APP_CONFIG_H */

@@ -20,27 +20,36 @@ static void test_local_input_policy(void) {
       .ok = true,
       .ok_long_press = true,
   };
-  input_event_t selected;
-
-  selected = input_event_for_mode(event, RADIO_INPUT_ENCODER);
-  assert(selected.rotation == 2);
-  assert(!selected.left);
-  assert(!selected.right);
-  assert(selected.click);
-  assert(selected.ok);
-  assert(input_event_requests_standby(selected));
-
-  selected = input_event_for_mode(event, RADIO_INPUT_BUTTONS);
-  assert(selected.rotation == 0);
-  assert(selected.left);
-  assert(selected.right);
-  assert(selected.click);
-  assert(selected.ok);
-  assert(input_event_requests_standby(selected));
+  /* Directional inputs are no longer filtered: the encoder and PA0/PA2 are
+   * consumed together by the LCD UI.  Both OK switches can request standby. */
+  assert(event.rotation == 2);
+  assert(event.left);
+  assert(event.right);
+  assert(event.click);
+  assert(event.ok);
+  assert(input_event_requests_standby(event));
 
   event.long_press = false;
   event.ok_long_press = false;
   assert(!input_event_requests_standby(event));
+}
+
+static void test_station_stepping(void) {
+  radio_settings_t settings;
+  radio_settings_defaults(&settings);
+  settings.station_count = 3U;
+  settings.stations[0].frequency_khz = 101000U;
+  settings.stations[1].frequency_khz = 90000U;
+  settings.stations[2].frequency_khz = 105000U;
+
+  assert(radio_station_step_index(&settings, 95000U, false, 0U, 1) == 0U);
+  assert(radio_station_step_index(&settings, 95000U, false, 0U, -1) == 1U);
+  assert(radio_station_step_index(&settings, 101000U, false, 0U, 1) == 1U);
+  assert(radio_station_step_index(&settings, 101000U, true, 0U, -1) == 2U);
+  assert(radio_station_step_index(&settings, 90000U, true, 1U, 2) == 0U);
+  assert(radio_station_step_index(&settings, 50000U, false, 0U, -1) == 2U);
+  settings.station_count = 0U;
+  assert(radio_station_step_index(&settings, 95000U, false, 0U, 1) == 0U);
 }
 
 static void test_frequency_rules(void) {
@@ -200,6 +209,20 @@ static void test_rds_clock(void) {
   assert(decoder.modified_julian_day == mjd);
   assert(decoder.local_hour == 13U);
   assert(decoder.local_minute == 30U);
+
+  blocks[2] = (uint16_t)(((mjd & 0x7FFFU) << 1) | 0U);
+  blocks[3] = (uint16_t)((15U << 6) | (1U << 5) | 2U);
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  assert(decoder.modified_julian_day == mjd - 1U);
+  assert(decoder.local_hour == 23U);
+  assert(decoder.local_minute == 15U);
+
+  blocks[2] = (uint16_t)(((mjd & 0x7FFFU) << 1) | 1U);
+  blocks[3] = (uint16_t)((7U << 12) | (45U << 6) | 2U);
+  rds_decoder_process(&decoder, blocks, 0U, 0U);
+  assert(decoder.modified_julian_day == mjd + 1U);
+  assert(decoder.local_hour == 0U);
+  assert(decoder.local_minute == 45U);
 }
 
 static void test_program_id_hysteresis(void) {
@@ -228,6 +251,7 @@ static void test_program_id_hysteresis(void) {
 int main(void) {
   test_local_input_policy();
   test_frequency_rules();
+  test_station_stepping();
   test_program_service();
   test_radio_text_and_ab_flag();
   test_rds_clock();

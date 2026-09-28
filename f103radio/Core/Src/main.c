@@ -9,6 +9,7 @@
 #include "lcd_ui.h"
 #include "pcd8544.h"
 #include "radio_app.h"
+#include "radio_clock.h"
 #include "splash_animation.h"
 #include "spi.h"
 #include "terminal_ui.h"
@@ -71,6 +72,7 @@ int main(void) {
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_USB_DEVICE_Init();
+  (void)radio_clock_init();
 
   now_ms = HAL_GetTick();
   radio_app_init(&app, &hi2c2, now_ms);
@@ -91,6 +93,7 @@ int main(void) {
     lcd_ui_handle_input(&lcd_ui, &app, event, now_ms);
     terminal_ui_process(&terminal_ui, &app, now_ms);
     radio_app_process(&app, now_ms);
+    radio_clock_sync_from_rds(&app.rds);
     lcd_ui_render(&lcd_ui, &app, now_ms);
     terminal_ui_render(&terminal_ui, &app, now_ms);
     HAL_Delay(1U);

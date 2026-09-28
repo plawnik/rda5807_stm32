@@ -171,6 +171,7 @@ static void decode_group_2(rds_decoder_t *decoder, uint16_t block_b,
 static void decode_group_4a(rds_decoder_t *decoder, uint16_t block_b,
                             uint16_t block_c, uint16_t block_d) {
   int16_t minutes;
+  uint32_t local_mjd;
   const uint8_t utc_hour = (uint8_t)(((block_c & 1U) << 4) |
                                      ((block_d >> 12) & 0x0FU));
   const uint8_t utc_minute = (uint8_t)((block_d >> 6) & 0x3FU);
@@ -178,12 +179,18 @@ static void decode_group_4a(rds_decoder_t *decoder, uint16_t block_b,
   const int8_t offset = (int8_t)(sign * (int8_t)(block_d & 0x1FU));
 
   if (utc_hour > 23U || utc_minute > 59U) return;
-  decoder->modified_julian_day = (uint16_t)(((block_b & 0x03U) << 15) |
-                                            (block_c >> 1));
+  local_mjd = (uint32_t)(((block_b & 0x03U) << 15) | (block_c >> 1));
   decoder->local_offset_half_hours = offset;
   minutes = (int16_t)((int16_t)utc_hour * 60 + utc_minute + offset * 30);
-  while (minutes < 0) minutes += 24 * 60;
-  while (minutes >= 24 * 60) minutes -= 24 * 60;
+  while (minutes < 0) {
+    minutes += 24 * 60;
+    if (local_mjd > 0U) --local_mjd;
+  }
+  while (minutes >= 24 * 60) {
+    minutes -= 24 * 60;
+    ++local_mjd;
+  }
+  decoder->modified_julian_day = (uint16_t)local_mjd;
   decoder->local_hour = (uint8_t)(minutes / 60);
   decoder->local_minute = (uint8_t)(minutes % 60);
   decoder->clock_valid = true;

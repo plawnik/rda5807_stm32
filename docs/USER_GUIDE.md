@@ -15,23 +15,27 @@ modulu co 2 sekundy.
 
 Dlugie przytrzymanie PB4 albo PA8 (okolo 0,75 s) pokazuje animacje zamykania,
 zapisuje oczekujace ustawienia, wylacza tuner i LCD, po czym usypia STM32 w
-trybie STOP. Oba przyciski OK sa zawsze aktywne, niezaleznie od wybranego
-zrodla ruchu po UI. Kolejne nacisniecie PB4 albo PA8 - krotkie lub dlugie -
+trybie STOP. Oba przyciski OK sa zawsze aktywne. Kolejne nacisniecie PB4 albo
+PA8 - krotkie lub dlugie -
 budzi radio i ponownie odtwarza animacje startowa.
 
 ## Ekran glowny LCD
 
-Ekran pokazuje czestotliwosc, RDS PS/RadioText, stereo/mono, stan strojenia,
-glosnosc i usredniony kod RSSI. Po wlaczeniu `Podbicie basu` w prawym gornym
-polu pojawia sie maly piktogram glosnika z fala basowa. Kod RSSI ma zakres
-`0...127`; nie jest wartoscia
-w dBm ani dBi.
+Ekran jest zbudowany w stylu Nokii 3310. Po bokach ma osmiostopniowe paski
+sygnalu i glosnosci. Pokazuje RSSI przeskalowane z kodu RDA `0...127` na
+`00...99`, glosnosc `0...15`, czestotliwosc, nazwe zapisanego wpisu, RDS
+PS/PTY i stabilny RadioText. Kod RSSI nie jest wartoscia w dBm ani dBi.
+
+Po odebraniu CT firmware ustawia sprzetowy RTC i pokazuje date `DD MMM` oraz
+czas `HH:MM`. RTC pracuje z LSI takze podczas STOP; kolejne poprawne CT koryguje
+jego dryft. Bez RDS obszar tekstowy zajmuje jedna z dwoch grafik pixel-art,
+zmienianych co 30 sekund.
 
 Na ekranie glownym:
 
 - obrot enkodera wykonuje akcje wybrana w `Sterowanie > Ruch enkodera`;
 - PA0/PA2 wykonuja akcje wybrana w `Sterowanie > Przyciski L/P`;
-- `Sterowanie > Sterowanie` wybiera aktywne zrodlo ruchu po UI;
+- enkoder i PA0/PA2 sa aktywne jednoczesnie, bez selektora zrodla;
 - krotki klik PB4 albo PA8 zawsze otwiera i obsluguje menu;
 - dlugie przytrzymanie PB4 albo PA8 przechodzi do standby.
 
@@ -50,7 +54,7 @@ krotki klik enkodera albo PA8 zatwierdza.
 | `Dzwiek` | glosnosc, mute, mono/stereo, bass, deemfaza |
 | `Odbior` | algorytm/progi seek, usrednianie RSSI, soft mute/blend, AFC, LNA |
 | `RDS` | dekoder RDS i wybor RDS/RBDS |
-| `Sterowanie` | wybor enkoder / trzy przyciski oraz osobna akcja lewo/prawo |
+| `Sterowanie` | osobna akcja lewo/prawo dla enkodera i PA0/PA2; oba dzialaja rownolegle |
 | `Ekran` | kontrast, negatyw i podswietlenie |
 | `Stacje` | dodawanie, strojenie, edycja i usuwanie stacji |
 | `System` | ustawienia domyslne |
@@ -69,7 +73,8 @@ Mozna zapisac do 12 stacji. `Dodaj stacje` uruchamia prosty kreator:
 
 Po wybraniu zapisanej stacji mozna ja odtworzyc, zmienic czestotliwosc, zmienic
 nazwe albo usunac. Przy akcji `Lista stacji` ruch lewo/prawo przechodzi po
-pozycjach cyklicznie.
+pozycjach cyklicznie. Jezeli aktualna czestotliwosc nie nalezy do listy,
+pierwszy ruch wybiera najblizsza zapisana stacje w zadanym kierunku.
 
 ## Terminal ANSI/VT100 przez UART i USB
 

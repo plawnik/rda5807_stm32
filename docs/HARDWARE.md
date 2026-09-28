@@ -73,12 +73,16 @@ maja wewnetrzne podciaganie. TIM2 stosuje filtr cyfrowy 15, a wszystkie
 przyciski maja programowy debounce 25 ms. Jezeli kierunek enkodera jest
 odwrotny, zmien `ENCODER_DIRECTION` z `1` na `-1`.
 
-Trzy osobne przyciski sa pelna alternatywa dla enkodera. Opcja `Sterowanie`
-wybiera tylko zrodlo ruchu lewo/prawo: obrot enkodera albo PA0/PA2. PB4 i PA8
-pozostaja zawsze aktywne jako krotkie OK, dlugie wylaczenie oraz wybudzenie.
-Dzieki temu PA8 pozwala wejsc do menu i zmienic tryb nawet wtedy, gdy w Flash
-jest jeszcze zapisane domyslne sterowanie enkoderem. Akcje lewo/prawo na
-ekranie glownym sa konfigurowalne niezaleznie od akcji obrotu enkodera.
+Trzy osobne przyciski dzialaja rownolegle z enkoderem; firmware nie ma
+selektora zrodla wejscia. PB4 i PA8 sa zawsze aktywne jako krotkie OK, dlugie
+wylaczenie oraz wybudzenie. Akcje PA0/PA2 na ekranie glownym sa konfigurowalne
+niezaleznie od akcji obrotu enkodera. W menu oba zrodla poruszaja tym samym
+zaznaczeniem.
+
+RTC korzysta z wewnetrznego oscylatora LSI, dlatego nie wymaga elementow na
+PC14/PC15. Domena backup zachowuje licznik w STOP, a czas CT z RDS okresowo
+koryguje dryft LSI. Podtrzymanie czasu po calkowitym odlaczeniu glownego
+zasilania wymaga zasilania VBAT.
 
 ## USB Virtual COM Port
 

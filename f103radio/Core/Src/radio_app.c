@@ -235,11 +235,25 @@ bool radio_app_station_tune(radio_app_t *app, uint8_t index,
   return true;
 }
 
+const radio_station_t *radio_app_current_station(const radio_app_t *app) {
+  if (app == NULL) return NULL;
+  if (app->active_station_valid &&
+      app->active_station_index < app->settings.station_count) {
+    return &app->settings.stations[app->active_station_index];
+  }
+  for (uint8_t index = 0U; index < app->settings.station_count; ++index) {
+    if (app->settings.stations[index].frequency_khz ==
+        app->settings.frequency_khz) {
+      return &app->settings.stations[index];
+    }
+  }
+  return NULL;
+}
+
 void radio_app_control_left_right(radio_app_t *app, uint8_t action,
                                   int16_t direction, uint32_t now_ms) {
   int32_t delta;
   uint8_t index;
-  uint16_t steps;
   if (app == NULL || direction == 0) return;
   switch ((radio_control_action_t)action) {
     case RADIO_CONTROL_TUNE_50_KHZ:
@@ -255,35 +269,9 @@ void radio_app_control_left_right(radio_app_t *app, uint8_t action,
       break;
     case RADIO_CONTROL_STATIONS:
       if (app->settings.station_count == 0U) return;
-      if (app->active_station_valid &&
-          app->active_station_index < app->settings.station_count) {
-        index = app->active_station_index;
-      } else {
-        bool found = false;
-        index = 0U;
-        for (uint8_t station = 0U;
-             station < app->settings.station_count; ++station) {
-          if (app->settings.stations[station].frequency_khz ==
-              app->settings.frequency_khz) {
-            index = station;
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          index = direction > 0 ? (uint8_t)(app->settings.station_count - 1U)
-                                : 0U;
-        }
-      }
-      steps = (uint16_t)(direction > 0 ? direction : -direction);
-      while (steps-- != 0U) {
-        if (direction > 0) {
-          index = (uint8_t)((index + 1U) % app->settings.station_count);
-        } else {
-          index = index == 0U ? (uint8_t)(app->settings.station_count - 1U)
-                              : (uint8_t)(index - 1U);
-        }
-      }
+      index = radio_station_step_index(
+          &app->settings, app->settings.frequency_khz,
+          app->active_station_valid, app->active_station_index, direction);
       radio_app_station_tune(app, index, now_ms);
       break;
     case RADIO_CONTROL_ACTION_COUNT:
@@ -378,7 +366,7 @@ const char *radio_app_menu_label(radio_menu_item_t item) {
       "Soft blend", "Prog soft blend", "AFC", "Nowy demodulator",
       "Wejscie LNA", "Prad LNA", "Kontrast LCD", "Negatyw LCD",
       "Podswietlenie", "Ruch enkodera", "Przyciski L/P",
-      "Sterowanie", "Ustawienia domyslne"};
+      "Ustawienia domyslne"};
   return item < RADIO_MENU_COUNT ? labels[item] : "?";
 }
 
@@ -437,9 +425,6 @@ void radio_app_menu_value(const radio_app_t *app, radio_menu_item_t item,
     case RADIO_MENU_BUTTON_ACTION:
       snprintf(buffer, buffer_size, "%s",
                radio_control_action_name(s->buttons_action)); break;
-    case RADIO_MENU_INPUT_MODE:
-      snprintf(buffer, buffer_size, "%s",
-               radio_input_mode_name(s->input_mode)); break;
     case RADIO_MENU_DEFAULTS: snprintf(buffer, buffer_size, "nacisnij"); break;
     default: break;
   }
@@ -519,11 +504,6 @@ void radio_app_menu_adjust(radio_app_t *app, radio_menu_item_t item,
     case RADIO_MENU_BUTTON_ACTION:
       s->buttons_action = wrap_u8((int32_t)s->buttons_action + delta,
                                   RADIO_CONTROL_ACTION_COUNT);
-      update_radio = false;
-      break;
-    case RADIO_MENU_INPUT_MODE:
-      s->input_mode = wrap_u8((int32_t)s->input_mode + delta,
-                              RADIO_INPUT_MODE_COUNT);
       update_radio = false;
       break;
     default: return;

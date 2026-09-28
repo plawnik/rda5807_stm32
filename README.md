@@ -66,6 +66,15 @@ Ekran główny zawiera:
 
 Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544 są zapisane po polsku bez znaków diakrytycznych, ponieważ w pamięci mikrokontrolera znajduje się mała czcionka ASCII. Terminal używa pełnego UTF-8.
 
+### Edytor układu PCD8544
+
+W [`tools/lcd-layout-editor/index.html`](tools/lcd-layout-editor/index.html)
+znajduje się działający offline edytor ekranu 84×48. Plik można otworzyć
+bezpośrednio w przeglądarce, bez instalacji i uruchamiania serwera. Narzędzie
+pozwala rysować pojedyncze piksele, definiować opisane obszary funkcjonalne
+oraz eksportować i ponownie importować projekt JSON. Wyeksportowany plik
+zawiera również gotowy 504-bajtowy bufor stron PCD8544.
+
 ## Sterowanie lokalne
 
 | Widok | Wybrane sterowanie kierunkiem: enkoder albo PA0/PA2 | PB4 albo PA8 | Długie przytrzymanie PB4 albo PA8 |

@@ -9,6 +9,7 @@ AS := $(CROSS_COMPILE)gcc
 OBJCOPY := $(CROSS_COMPILE)objcopy
 SIZE := $(CROSS_COMPILE)size
 HOST_CC ?= gcc
+NODE ?= node
 
 MCU_FLAGS := -mcpu=cortex-m3 -mthumb
 DEFINES := -DUSE_HAL_DRIVER -DSTM32F103xB
@@ -88,6 +89,7 @@ $(FIRMWARE_DIR)/%.o: %.s
 test: $(HOST_TEST) $(HOST_TERMINAL_TEST)
 	$(HOST_TEST)
 	$(HOST_TERMINAL_TEST)
+	$(NODE) tests/test_lcd_layout_editor.js
 
 $(HOST_TEST): $(HOST_TEST_SOURCES)
 	@mkdir -p $(@D)

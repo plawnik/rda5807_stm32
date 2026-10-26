@@ -20,5 +20,10 @@ typedef struct {
 bool radio_clock_init(void);
 void radio_clock_sync_from_rds(const rds_decoder_t *rds);
 bool radio_clock_read(radio_clock_time_t *time);
+/* Manual HH:MM preserves the date and disables automatic RDS correction until
+ * the user enables it again. Both choices live in the RTC backup domain. */
+bool radio_clock_set(uint8_t hour, uint8_t minute);
+bool radio_clock_rds_sync_enabled(void);
+void radio_clock_set_rds_sync(bool enabled);
 
 #endif /* RADIO_CLOCK_H */

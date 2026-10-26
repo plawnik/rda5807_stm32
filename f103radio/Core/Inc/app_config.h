@@ -8,7 +8,7 @@
 #define RADIO_SYNTH_MAX_KHZ 115000U
 #define RADIO_REGISTER_MAX_KHZ (87000U + (0x03FFU * 200U))
 #define RADIO_MAX_STATIONS 12U
-#define RADIO_STATION_NAME_LENGTH 8U
+#define RADIO_STATION_NAME_LENGTH 32U
 #define RADIO_RSSI_AVERAGE_MIN_MS 200U
 #define RADIO_RSSI_AVERAGE_MAX_MS 5000U
 #define RADIO_RSSI_AVERAGE_STEP_MS 100U
@@ -82,8 +82,7 @@ typedef struct {
   uint8_t station_count;
   uint8_t reserved[3];
   radio_station_t stations[RADIO_MAX_STATIONS];
-  /* Kept in settings format 4 for binary compatibility.  Both local input
-   * devices are now always active, so this former input selector is reserved. */
+  /* Retired input selector, reserved since format 4. Both devices stay active. */
   uint8_t reserved_input_mode;
   uint8_t reserved_v4[3];
 } radio_settings_t;

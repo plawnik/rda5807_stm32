@@ -59,15 +59,17 @@ Ekran główny zawiera:
 
 - boczny, ośmiostopniowy wskaźnik sygnału oraz RSSI przeskalowane na `00…99`;
 - boczny wskaźnik głośności `0…15`, głośnik lub znak wyciszenia;
-- częstotliwość `50.00MHz…291.60MHz` bez nieznaczącego zera z przodu;
+- częstotliwość wyśrodkowaną w dolnej części, bez nieznaczących zer: `100MHz`, `106.1MHz`, `97.55MHz`;
 - nazwę wpisu z zapisanej listy stacji albo `FM`;
-- ikonę RDS, skróconą nazwę PS i PTY oraz stabilny RadioText w dwóch wierszach;
-- datę `DD MMM` i czas `HH:MM` po pierwszej synchronizacji CT z RDS;
-- aktualną akcję ostatnio użytego sterowania: `TUNE`, `SEEK` albo `STACJA`;
+- dokładne bitmapy statusu RDS, BASS i mono/stereo z projektu, PS i PTY oraz RadioText: pierwszy wiersz stały, drugi przewijany z odstępem pięciu spacji;
+- czas RTC `HH:MM` ustawiany ręcznie lub z CT RDS;
+- bitmapę aktualnej akcji ostatnio użytego sterowania: częstotliwość, seek albo zapisana stacja;
 - jedną z dwóch grafik pixel-art zmienianych co 30 s, kiedy nie ma RDS.
 
 Zegar RTC STM32 jest taktowany z LSI, działa także w STOP i jest okresowo
-korygowany czasem CT. Dzięki temu nie wymaga kwarcu 32,768 kHz, ale dokładność
+korygowany czasem CT, gdy opcja `System > Zegar z RDS` jest włączona.
+`System > Ustaw zegar` zapisuje ręcznie godzinę i wyłącza korekcję CT, aby
+nie nadpisywała ustawienia użytkownika. Dzięki temu nie wymaga kwarcu 32,768 kHz, ale dokładność
 między synchronizacjami zależy od niedokładnego oscylatora LSI.
 
 Wybrana, zbyt długa pozycja menu przewija się automatycznie. Napisy na PCD8544 są zapisane po polsku bez znaków diakrytycznych, ponieważ w pamięci mikrokontrolera znajduje się mała czcionka ASCII. Terminal używa pełnego UTF-8.
@@ -80,6 +82,14 @@ bezpośrednio w przeglądarce, bez instalacji i uruchamiania serwera. Narzędzie
 pozwala rysować pojedyncze piksele, definiować opisane obszary funkcjonalne
 oraz eksportować i ponownie importować projekt JSON. Wyeksportowany plik
 zawiera również gotowy 504-bajtowy bufor stron PCD8544.
+
+Firmware korzysta z przekazanego projektu
+[`assets/menu/radio-menu.json`](assets/menu/radio-menu.json). Po zastąpieniu
+tego pliku kolejnym eksportem uruchom `make layout` i dodaj do commita również
+wygenerowane `lcd_layout.c`/`.h`. `make test` i `make firmware` odrzucą
+nieaktualne tablice. Na MCU trafiają tylko stałe bitmapy i definicje, bez
+parsera JSON. Dokładne mapowanie pól, progi sygnału i obsługa menu są opisane
+w [docs/UI_JSON.md](docs/UI_JSON.md).
 
 ## Sterowanie lokalne
 
@@ -153,11 +163,11 @@ jednego automatycznego planera częstotliwości.
 | `Zakres rozszerzony` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WYL.` | Podnosi limit z `115,00` do rejestrowych `291,60 MHz`. Jest to tryb eksperymentalny bez gwarancji blokady PLL i odbioru przez analogowy tor RF. |
 | `Szukaj w gore` | Terminal + LCD | akcja | Ustawia bit `SEEKUP` i uruchamia sprzętowy seek w kierunku rosnącej częstotliwości. Operacja kończy się po znalezieniu stacji spełniającej aktywne progi albo na granicy pasma. Na ekranie głównym terminala odpowiada jej `→`. |
 | `Szukaj w dol` | Terminal + LCD | akcja | Jak wyżej, ale szuka w kierunku malejącej częstotliwości. Na ekranie głównym terminala odpowiada jej `←`. |
-| `Koniec szukania` | Terminal + LCD | `ZAPETL` / `STOP`; domyślnie `ZAPETL` | Steruje `SKMODE`. `ZAPETL` przechodzi z końca pasma na jego początek i szuka dalej; `STOP` kończy operację na granicy. |
-| `Alg. szukania` | Terminal + LCD | `SNR` / `RSSI`; domyślnie `SNR` | Wybiera sposób kwalifikowania znalezionej stacji. SNR opiera decyzję na jakości sygnału, a tryb RSSI dodaje ocenę jego poziomu; wynik zależy także od odpowiedniego progu poniżej. |
+| `Koniec szukania` | Terminal | `ZAPETL` / `STOP`; domyślnie `ZAPETL` | Steruje `SKMODE`. `ZAPETL` przechodzi z końca pasma na jego początek i szuka dalej; `STOP` kończy operację na granicy. |
+| `Alg. szukania` | Terminal | `SNR` / `RSSI`; domyślnie `SNR` | Wybiera sposób kwalifikowania znalezionej stacji. SNR opiera decyzję na jakości sygnału, a tryb RSSI dodaje ocenę jego poziomu; wynik zależy także od odpowiedniego progu poniżej. |
 | `Prog szukania` | Terminal + LCD | `0…15`, domyślnie `8` | Ustawia `SEEKTH`, czyli próg SNR. Wyższa wartość zwykle odrzuca więcej słabych lub zaszumionych częstotliwości, ale może pominąć użyteczną stację. |
-| `Stary prog` | Terminal + LCD | `0…63`, domyślnie `16` | Ustawia `SEEK_TH_OLD`, używany przez udokumentowany tryb seek RSSI. Wyższy próg zawęża wyniki do silniejszych sygnałów; dokumentacja nie podaje jego bezwzględnej jednostki, więc najlepiej dobrać go doświadczalnie. |
-| `Usrednianie RSSI` | Terminal + LCD | `0,2…5,0 s`, krok `0,1 s`, domyślnie `1,0 s` | Ustawia czas okna średniej pokazywanej na LCD i w terminalu. Krótsze okno reaguje szybciej, dłuższe ogranicza skakanie wskaźnika. Nie zmienia pracy toru RF. |
+| `Stary prog` | Terminal | `0…63`, domyślnie `16` | Ustawia `SEEK_TH_OLD`, używany przez udokumentowany tryb seek RSSI. Wyższy próg zawęża wyniki do silniejszych sygnałów; dokumentacja nie podaje jego bezwzględnej jednostki, więc najlepiej dobrać go doświadczalnie. |
+| `Usrednianie RSSI` | Terminal + LCD | `0,2 / 0,5 / 1 / 2 / 5 s` na LCD; terminal co `0,1 s`; domyślnie `1 s` | Ustawia czas okna średniej pokazywanej na LCD i w terminalu. Krótsze okno reaguje szybciej, dłuższe ogranicza skakanie wskaźnika. Nie zmienia pracy toru RF. |
 
 ### Dźwięk i tor odbiorczy
 
@@ -167,14 +177,14 @@ jednego automatycznego planera częstotliwości.
 | `Wyciszenie` | Terminal + LCD | `NIE` / `TAK`, domyślnie `NIE` | Steruje `DMUTE`. Wycisza tor audio bez zmiany częstotliwości i głośności, więc po wyłączeniu mute wracają poprzednie ustawienia. Skrót globalny: `M`. |
 | `Tryb audio` | Terminal + LCD | `AUTO STEREO` / `MONO`, domyślnie `AUTO STEREO` | `AUTO STEREO` pozwala układowi przełączyć się na stereo po wykryciu pilota. Wymuszone mono usuwa separację kanałów, ale przy słabym sygnale zwykle zmniejsza słyszalny szum. Skrót terminala: `S`. |
 | `Podbicie basu` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WYL.` | Włącza wewnętrzny `BASS`. Zwiększa udział niskich częstotliwości; może poprawić odsłuch na małym głośniku, ale także szybciej przesterować dalszy tor audio. |
-| `Deemfaza` | Terminal + LCD | `50 µs` / `75 µs`, domyślnie `50 µs` | Dopasowuje filtr deemfazy do standardu nadawania. W Europie używa się zwykle 50 µs, a w Ameryce Północnej 75 µs. Zła wartość zmienia ilość wysokich tonów i słyszalnego szumu. |
-| `Soft mute` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Automatycznie ścisza dźwięk, gdy odbiór staje się słaby lub zaszumiony. Ogranicza gwałtowny szum między stacjami kosztem chwilowego spadku głośności. |
-| `Soft blend` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Przy pogorszeniu odbioru płynnie zmniejsza separację stereo w stronę mono. Zwykle daje przyjemniejszy odsłuch słabej stacji bez nagłego przełączenia. |
-| `Prog soft blend` | Terminal + LCD | `0…31`, krok opisany jako `2 dB`, domyślnie `16` | Ustawia punkt, przy którym działa soft blend. Większa wartość przesuwa próg według wewnętrznej skali układu; ponieważ datasheet nie opisuje całej charakterystyki, należy dobrać ją odsłuchem. |
-| `AFC` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Automatyczna kontrola częstotliwości koryguje niewielkie odstrojenie odbiornika. Wyłączenie ma sens głównie podczas pomiarów lub eksperymentów; w normalnym odbiorze może pogorszyć stabilność dostrojenia. |
-| `Nowy demodulator` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WL.` | Ustawia `NEW_METHOD`. Producent deklaruje poprawę czułości odbioru o około `1 dB`; wyłączenie pozwala porównać zachowanie starszej metody. |
-| `Wejscie LNA` | Terminal + LCD | `wylaczone`, `LNAN`, `LNAP`, `dual`; domyślnie `LNAP` | Wybiera wejście wzmacniacza niskoszumowego. Musi odpowiadać fizycznemu podłączeniu modułu; zła wartość może bardzo osłabić albo całkowicie usunąć odbiór. |
-| `Prad LNA` | Terminal + LCD | `1,8`, `2,1`, `2,5`, `3,0 mA`; domyślnie `1,8 mA` | Zmienia prąd pracy LNA. Większy prąd może wpłynąć na szumy i liniowość przy silnych sygnałach, ale zwiększa pobór energii; nie jest to regulacja głośności ani bezpośredni „gain”. |
+| `Deemfaza` | Terminal | `50 µs` / `75 µs`, domyślnie `50 µs` | Dopasowuje filtr deemfazy do standardu nadawania. W Europie używa się zwykle 50 µs, a w Ameryce Północnej 75 µs. Zła wartość zmienia ilość wysokich tonów i słyszalnego szumu. |
+| `Soft mute` | Terminal | `WYL.` / `WL.`, domyślnie `WL.` | Automatycznie ścisza dźwięk, gdy odbiór staje się słaby lub zaszumiony. Ogranicza gwałtowny szum między stacjami kosztem chwilowego spadku głośności. |
+| `Soft blend` | Terminal | `WYL.` / `WL.`, domyślnie `WL.` | Przy pogorszeniu odbioru płynnie zmniejsza separację stereo w stronę mono. Zwykle daje przyjemniejszy odsłuch słabej stacji bez nagłego przełączenia. |
+| `Prog soft blend` | Terminal | `0…31`, krok opisany jako `2 dB`, domyślnie `16` | Ustawia punkt, przy którym działa soft blend. Większa wartość przesuwa próg według wewnętrznej skali układu; ponieważ datasheet nie opisuje całej charakterystyki, należy dobrać ją odsłuchem. |
+| `AFC` | Terminal + LCD | `WYL.` / `WL.`, domyślnie `WYL.` według JSON | Automatyczna kontrola częstotliwości koryguje niewielkie odstrojenie odbiornika. Wyłączenie ma sens głównie podczas pomiarów lub eksperymentów; w normalnym odbiorze może pogorszyć stabilność dostrojenia. |
+| `Nowy demodulator` | Terminal | `WYL.` / `WL.`, domyślnie `WL.` | Ustawia `NEW_METHOD`. Producent deklaruje poprawę czułości odbioru o około `1 dB`; wyłączenie pozwala porównać zachowanie starszej metody. |
+| `Wejscie LNA` | Terminal | `wylaczone`, `LNAN`, `LNAP`, `dual`; domyślnie `LNAP` | Wybiera wejście wzmacniacza niskoszumowego. Musi odpowiadać fizycznemu podłączeniu modułu; zła wartość może bardzo osłabić albo całkowicie usunąć odbiór. |
+| `Prad LNA` | Terminal | `1,8`, `2,1`, `2,5`, `3,0 mA`; domyślnie `1,8 mA` | Zmienia prąd pracy LNA. Większy prąd może wpłynąć na szumy i liniowość przy silnych sygnałach, ale zwiększa pobór energii; nie jest to regulacja głośności ani bezpośredni „gain”. |
 
 ### RDS/RBDS
 

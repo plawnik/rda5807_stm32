@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define SETTINGS_MAGIC 0x52414449UL /* "RADI" */
-#define SETTINGS_FORMAT_VERSION 4U
+#define SETTINGS_FORMAT_VERSION 5U
 #define SETTINGS_PREVIOUS_VERSION 3U
 #define SETTINGS_LEGACY_VERSION 2U
 
@@ -45,6 +45,13 @@ typedef struct {
   bool lcd_backlight;
 } radio_settings_v2_t;
 
+/* Station layout in formats 3 and 4 had eight-character names. */
+typedef struct {
+  uint32_t frequency_khz;
+  char name[9];
+  uint8_t reserved[3];
+} radio_station_legacy_t;
+
 /* Exact payload layout written by firmware format 3. */
 typedef struct {
   radio_settings_v2_t v2;
@@ -53,8 +60,14 @@ typedef struct {
   uint8_t buttons_action;
   uint8_t station_count;
   uint8_t reserved[3];
-  radio_station_t stations[RADIO_MAX_STATIONS];
+  radio_station_legacy_t stations[RADIO_MAX_STATIONS];
 } radio_settings_v3_t;
+
+typedef struct {
+  radio_settings_v3_t v3;
+  uint8_t reserved_input_mode;
+  uint8_t reserved_v4[3];
+} radio_settings_v4_t;
 
 typedef struct {
   uint32_t magic;
@@ -83,6 +96,15 @@ typedef struct {
   uint32_t crc32;
 } settings_record_v3_t;
 
+typedef struct {
+  uint32_t magic;
+  uint16_t version;
+  uint16_t payload_size;
+  uint32_t sequence;
+  radio_settings_v4_t settings;
+  uint32_t crc32;
+} settings_record_v4_t;
+
 _Static_assert((sizeof(settings_record_t) % 2U) == 0U,
                "Flash record must contain complete halfwords");
 _Static_assert(sizeof(settings_record_t) <= SETTINGS_FLASH_PAGE_SIZE,
@@ -90,9 +112,9 @@ _Static_assert(sizeof(settings_record_t) <= SETTINGS_FLASH_PAGE_SIZE,
 _Static_assert(sizeof(radio_settings_v2_t) ==
                    offsetof(radio_settings_t, rssi_average_ms),
                "Version 2 settings must match the current prefix");
-_Static_assert(sizeof(radio_settings_v3_t) ==
-                   offsetof(radio_settings_t, reserved_input_mode),
-               "Version 3 settings must match the current prefix");
+_Static_assert(offsetof(radio_settings_v3_t, stations) ==
+                   offsetof(radio_settings_t, stations),
+               "Version 3 scalar settings must match the current prefix");
 
 uint32_t settings_store_crc32(const void *data, uint32_t length) {
   const uint8_t *bytes = (const uint8_t *)data;
@@ -106,7 +128,7 @@ uint32_t settings_store_crc32(const void *data, uint32_t length) {
   return ~crc;
 }
 
-static bool record_valid_v4(const settings_record_t *record) {
+static bool record_valid_v5(const settings_record_t *record) {
   if (record->magic != SETTINGS_MAGIC ||
       record->version != SETTINGS_FORMAT_VERSION ||
       record->payload_size != sizeof(radio_settings_t)) {
@@ -114,6 +136,13 @@ static bool record_valid_v4(const settings_record_t *record) {
   }
   return record->crc32 == settings_store_crc32(
       record, (uint32_t)offsetof(settings_record_t, crc32));
+}
+
+static bool record_valid_v4(const settings_record_v4_t *record) {
+  if (record->magic != SETTINGS_MAGIC || record->version != 4U ||
+      record->payload_size != sizeof(radio_settings_v4_t)) return false;
+  return record->crc32 == settings_store_crc32(
+      record, (uint32_t)offsetof(settings_record_v4_t, crc32));
 }
 
 static bool record_valid_v3(const settings_record_v3_t *record) {
@@ -144,9 +173,15 @@ static bool page_valid(uint32_t address, uint32_t *sequence,
       (const settings_record_v3_t *)(uintptr_t)address;
   const settings_record_v2_t *legacy =
       (const settings_record_v2_t *)(uintptr_t)address;
-  if (record_valid_v4(current)) {
+  const settings_record_v4_t *v4 = (const settings_record_v4_t *)(uintptr_t)address;
+  if (record_valid_v5(current)) {
     *sequence = current->sequence;
     *version = SETTINGS_FORMAT_VERSION;
+    return true;
+  }
+  if (record_valid_v4(v4)) {
+    *sequence = v4->sequence;
+    *version = 4U;
     return true;
   }
   if (record_valid_v3(previous)) {
@@ -211,11 +246,17 @@ bool settings_store_load(settings_store_t *store, radio_settings_t *settings) {
         (const settings_record_t *)(uintptr_t)selected_address;
     memcpy(settings, &record->settings, sizeof(*settings));
     store->sequence = record->sequence;
-  } else if (selected_version == SETTINGS_PREVIOUS_VERSION) {
+  } else if (selected_version == 4U || selected_version == 3U) {
+    /* v4 appends only the retired input selector, so its v3 prefix is exact. */
     const settings_record_v3_t *record =
         (const settings_record_v3_t *)(uintptr_t)selected_address;
     radio_settings_defaults(settings);
-    memcpy(settings, &record->settings, sizeof(record->settings));
+    memcpy(settings, &record->settings, offsetof(radio_settings_v3_t, stations));
+    for (uint8_t i = 0U; i < RADIO_MAX_STATIONS; ++i) {
+      settings->stations[i].frequency_khz = record->settings.stations[i].frequency_khz;
+      memcpy(settings->stations[i].name, record->settings.stations[i].name, 8U);
+      settings->stations[i].name[8] = '\0';
+    }
     store->sequence = record->sequence;
   } else {
     const settings_record_v2_t *record =

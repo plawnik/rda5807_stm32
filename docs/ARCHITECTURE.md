@@ -25,7 +25,9 @@ Strojenie i wyszukiwanie są uruchamiane zapisem rejestrów, a ich zakończenie 
 | `spi` / `dma` | oficjalny STM32 HAL, SPI1 master TX i DMA1 Channel 3 |
 | `input` | TIM2 jako enkoder oraz debouncing przycisku enkodera i PA0/PA2/PA8 |
 | `radio_app` | stan aplikacji, menu i synchronizacja sprzętu |
-| `lcd_ui` | ekran główny, hierarchiczne menu, stacje i przewijanie tekstu |
+| `lcd_layout` | wygenerowane z JSON stałe bitmapy, fonty, pola, menu i wartości fabryczne |
+| `lcd_home` | składanie ekranu według pól JSON, statusy tunera, wyrównanie i przewijanie |
+| `lcd_ui` | hierarchiczne menu, edycja opcji, stacje, potwierdzenia i ustawianie zegara |
 | `splash_animation` | losowany ekran startu/zamykania i dekoder ramek RLE |
 | `terminal_ui` | wspólny parser VT100 dla UART/USB, duże cyfry i różnicowe odświeżanie wierszy |
 | `settings_store` | dwie strony Flash, sekwencja rekordu i CRC32 |
@@ -88,3 +90,20 @@ segmentow PS/RadioText, filtrowanie A/B i PI oraz czas RDS. Osobny test panelu
 terminalowego korzysta z atrap UART i potwierdza brak czyszczenia ekranu,
 skroty, przejscie `106.00 -> 105.90` i uzycie pelnych blokow `█` zamiast `#`.
 `make firmware` osobno buduje caly obraz dla Cortex-M3.
+
+
+## Kompilacja projektu ekranu
+
+`tools/generate_lcd_layout.py` czyta `assets/menu/radio-menu.json`, sprawdza
+spojnosc `rows` i `pcd8544PageBytes`, granice pol, odwolania do grafik oraz
+powiazania z funkcjami radia. Wytwarza `lcd_layout.c`/`.h` ze stalymi danymi
+we Flash. Nieznana pozycja menu lub brak wymaganego pola jest bledem, a nie
+milczaco pomijana funkcja. Opisy zachowania sa realizowane przez `lcd_home`
+i `lcd_ui`; generator nie interpretuje dowolnych zdan ani warunkow JavaScript.
+
+`make test` porownuje wygenerowane pliki z zrodlem, wykonuje test interakcji
+LCD z prawdziwym modelem radia i zapisem Flash przy atrapach peryferiow, a
+nastepnie porownuje piksele bufora C z oryginalnym JSON. Test obejmuje menu,
+progi, wyciszenie, przewijanie, ustawianie zegara, kreator stacji oraz migracje
+formatow 2/3/4 do formatu 5. Rekord formatu 5 z nazwami do 32 znakow nadal
+miesci sie na jednej stronie 1 KiB.

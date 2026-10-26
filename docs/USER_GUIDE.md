@@ -24,11 +24,15 @@ budzi radio i ponownie odtwarza animacje startowa.
 Ekran jest zbudowany w stylu Nokii 3310. Po bokach ma osmiostopniowe paski
 sygnalu i glosnosci. Pokazuje RSSI przeskalowane z kodu RDA `0...127` na
 `00...99`, glosnosc `0...15`, czestotliwosc, nazwe zapisanego wpisu, RDS
-PS/PTY i stabilny RadioText. Kod RSSI nie jest wartoscia w dBm ani dBi.
+PS/PTY i RadioText. Pierwszy wiersz RT jest nieruchomy, drugi przewija
+caly ten sam tekst z odstepem pieciu spacji. Nazwa zapisanej stacji tez sie
+przewija, jesli nie miesci sie w polu 72 pikseli. Kod RSSI nie jest wartoscia w dBm ani dBi.
 
-Po odebraniu CT firmware ustawia sprzetowy RTC i pokazuje date `DD MMM` oraz
-czas `HH:MM`. RTC pracuje z LSI takze podczas STOP; kolejne poprawne CT koryguje
-jego dryft. Bez RDS obszar tekstowy zajmuje jedna z dwoch grafik pixel-art,
+Firmware pokazuje czas `HH:MM` ze sprzetowego RTC. Mozna go ustawic przez
+`System > Ustaw zegar`: najpierw godzina, potem minuta, OK zapisuje.
+Reczne ustawienie wylacza korekcje CT; mozna ja ponownie wlaczyc przez
+`System > Zegar z RDS`. RTC pracuje z LSI takze podczas STOP. Przed pierwszym
+ustawieniem czasu wyswietlane jest `--:--`. Bez RDS obszar tekstowy zajmuje jedna z dwoch grafik pixel-art,
 zmienianych co 30 sekund.
 
 Na ekranie glownym:
@@ -51,13 +55,13 @@ krotki klik enkodera albo PA8 zatwierdza.
 | Kategoria | Zawartosc |
 |---|---|
 | `Radio` | czestotliwosc, zakres rozszerzony, seek w gore/dol |
-| `Dzwiek` | glosnosc, mute, mono/stereo, bass, deemfaza |
-| `Odbior` | algorytm/progi seek, usrednianie RSSI, soft mute/blend, AFC, LNA |
+| `Dzwiek` | glosnosc, mute, mono/stereo, bass |
+| `Odbior` | prog seek, usrednianie RSSI 0,2/0,5/1/2/5 s, AFC |
 | `RDS` | dekoder RDS i wybor RDS/RBDS |
 | `Sterowanie` | osobna akcja lewo/prawo dla enkodera i PA0/PA2; oba dzialaja rownolegle |
 | `Ekran` | kontrast, negatyw i podswietlenie |
 | `Stacje` | dodawanie, strojenie, edycja i usuwanie stacji |
-| `System` | ustawienia domyslne |
+| `System` | wersja firmware, reset ustawien z potwierdzeniem, zegar, synchronizacja CT |
 | `Wyjscie` | powrot na ekran glowny |
 
 Reczne `BAND`, dolna baza 50/65 MHz i `SPACE` nie sa pokazywane. Firmware
@@ -68,8 +72,10 @@ dobiera je automatycznie do zadanej czestotliwosci.
 Mozna zapisac do 12 stacji. `Dodaj stacje` uruchamia prosty kreator:
 
 1. ustaw czestotliwosc z krokiem 50 kHz;
-2. wybierz osiem znakow nazwy;
-3. zatwierdz ostatni znak.
+2. ustaw nazwe do 32 znakow: obrot lub L/P wybiera pozycje, OK wlacza edycje
+   znaku, obrot lub L/P zmienia znak, OK konczy edycje;
+3. przejdz za ostatni znak i wolna pozycje dopisywania do `ZAPISZ`, nacisnij OK.
+   Obok jest `ANULUJ`. Nie trzeba zatwierdzac 32 pustych znakow.
 
 Po wybraniu zapisanej stacji mozna ja odtworzyc, zmienic czestotliwosc, zmienic
 nazwe albo usunac. Przy akcji `Lista stacji` ruch lewo/prawo przechodzi po
@@ -140,3 +146,13 @@ Zmiana konfiguracji uruchamia 3-sekundowe opoznienie. Po okresie bez kolejnej
 zmiany caly rekord, lacznie z lista stacji, trafia do jednej z dwoch stron
 Flash. Rekord ma numer sekwencji i CRC32. Przy zaniku zasilania podczas zapisu
 poprzednia poprawna kopia pozostaje na drugiej stronie.
+
+
+## Projekt JSON i nowe ustawienia
+
+Uklad LCD, bitmapy, czcionki i pozycje menu pochodza z
+`assets/menu/radio-menu.json`. Szczegoly sa w `UI_JSON.md`.
+Ustawienia fabryczne sa stosowane przy pustej pamieci albo po wybraniu
+`System > Ustawienia domyslne > TAK`. Po aktualizacji stare ustawienia
+pozostaja zachowane, w tym lista stacji. Nowy format 5 wczytuje i przenosi
+formaty 2, 3 oraz 4; dlugosc starych nazw nie jest sztucznie rozszerzana.

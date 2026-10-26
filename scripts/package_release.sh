@@ -24,6 +24,9 @@ cp "${firmware_dir}/rda5807_stm32.hex" "${stage_dir}/"
 cp "${firmware_dir}/rda5807_stm32.bin" "${stage_dir}/"
 cp "${firmware_dir}/rda5807_stm32.map" "${stage_dir}/"
 cp docs/FLASHING.md "${stage_dir}/FLASHING.md"
+cp docs/USER_GUIDE.md "${stage_dir}/USER_GUIDE.md"
+cp docs/UI_JSON.md "${stage_dir}/UI_JSON.md"
+cp assets/menu/radio-menu.json "${stage_dir}/radio-menu.json"
 
 {
   echo "RDA5807M STM32 firmware"
@@ -35,7 +38,7 @@ cp docs/FLASHING.md "${stage_dir}/FLASHING.md"
 
 (
   cd "${stage_dir}"
-  sha256sum BUILD_INFO.txt FLASHING.md rda5807_stm32.bin \
+  sha256sum BUILD_INFO.txt FLASHING.md USER_GUIDE.md UI_JSON.md radio-menu.json rda5807_stm32.bin \
     rda5807_stm32.elf rda5807_stm32.hex rda5807_stm32.map > SHA256SUMS.txt
   zip -9 -q "${output_abs}/${archive_name}" ./*
 )

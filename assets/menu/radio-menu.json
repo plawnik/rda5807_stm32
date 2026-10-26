@@ -1,0 +1,6246 @@
+{
+  "format": "rda5807-pcd8544-layout",
+  "version": 2,
+  "generatedAt": "2026-10-26T12:46:51.288Z",
+  "display": {
+    "controller": "PCD8544",
+    "width": 84,
+    "height": 48,
+    "colorDepthBits": 1,
+    "packing": {
+      "order": "vertical pages",
+      "pageHeight": 8,
+      "bit0": "top pixel"
+    }
+  },
+  "project": {
+    "name": "Radio STM32 + RDA5807",
+    "notes": "",
+    "createdAt": "2026-10-26T10:06:19.706Z",
+    "updatedAt": "2026-10-26T12:44:48.640Z"
+  },
+  "home": {
+    "name": "Ekran główny radia",
+    "description": "Główny ekran w stylu Nokii 3310. Pola mają opisy i warianty ikon zależne od stanu radia.",
+    "regions": [
+      {
+        "id": "region-970ebc52-298f-495a-a3c5-b8790aeab642",
+        "name": "Siła sygnału FM",
+        "description": "Tutaj będzie pojawiać się siła sygnału. Ustaw jakieś sensowne progi na każdy poziom. Najniższy sygnał, obraz signal_lvl_0, kolejny signal_lvl_1. Potraktuj informacje od sile sygnału dostępną w RDA5807 jako dBm i ustaw jakieś sensowne progi, na przykład że pierwszy level to słaby sygnał radiowy, ale już słyszalny, zaszumiony, a maksymalny zasięg to stereo z poprawnie działającym RDS.\n\n",
+        "x": 0,
+        "y": 0,
+        "width": 4,
+        "height": 36,
+        "color": "#1a5fb4",
+        "visibleInEditor": true,
+        "previewVariant": 8,
+        "graphics": [
+          {
+            "id": "graphic-ab189e7c-01b6-4f4a-883c-d90c6691ff49",
+            "name": "lvl0",
+            "condition": "",
+            "assetId": "asset-bc22a7a6-8760-490c-a14f-e8d45c5c4ef4"
+          },
+          {
+            "id": "graphic-f3afb54b-9831-4927-93d9-a5dda39e4205",
+            "name": "lvl1",
+            "condition": "",
+            "assetId": "asset-63d2e195-c50e-4853-947f-f0d384b8d9db"
+          },
+          {
+            "id": "graphic-3e062a79-93e1-4345-9578-7562911140c5",
+            "name": "lvl2",
+            "condition": "",
+            "assetId": "asset-c3d3b6b8-2a23-44ff-aa91-c0d16f8b3bfe"
+          },
+          {
+            "id": "graphic-96c4a893-bd0a-4283-abe9-966c13e3fecb",
+            "name": "lvl3",
+            "condition": "",
+            "assetId": "asset-548108fa-bc56-499f-a33a-2c333fae6fe1"
+          },
+          {
+            "id": "graphic-0892e460-ac1e-4257-a15b-089021958b06",
+            "name": "lvl4",
+            "condition": "",
+            "assetId": "asset-ee87e9df-435e-4388-98e1-fcc0b8febcc6"
+          },
+          {
+            "id": "graphic-c264f9ca-b111-4470-b658-c25d99d17c93",
+            "name": "lvl5",
+            "condition": "",
+            "assetId": "asset-3e073ae9-d3ac-4d5b-a525-cacd8befd741"
+          },
+          {
+            "id": "graphic-34316bb4-2acd-4257-a995-6fde7daa83e6",
+            "name": "lvl6",
+            "condition": "",
+            "assetId": "asset-3de06689-94e1-4ac4-99ec-c6d3a08991e7"
+          },
+          {
+            "id": "graphic-ebfdb1bb-8365-44e0-bd7f-274d0a036adc",
+            "name": "lvl7",
+            "condition": "",
+            "assetId": "asset-38c350bf-f510-45e0-a252-a8380569a20e"
+          },
+          {
+            "id": "graphic-765ee06e-d1ef-4280-ab52-3f691b3f4fcf",
+            "name": "lvl8",
+            "condition": "",
+            "assetId": "asset-b33a1138-8db2-4080-b487-b45625a6a912"
+          }
+        ]
+      },
+      {
+        "id": "region-afd8b038-9591-4a1e-bdf1-c9dbcb8bbea2",
+        "name": "RDS status",
+        "description": "Piktogram rds, wyswietla się w momencie gdy radio odbiera sygnał RDS, w przypadku gdy go nie ma, ma zostać puste.",
+        "x": 5,
+        "y": 0,
+        "width": 20,
+        "height": 4,
+        "color": "#55d6ff",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": [
+          {
+            "id": "graphic-442ce284-76d7-488f-b6d7-8a25ee0cb4d8",
+            "name": "RDS_LOGO",
+            "condition": "",
+            "assetId": "asset-b92d98ab-b6bf-4a91-90bf-2fdf8d010ee5"
+          }
+        ]
+      },
+      {
+        "id": "region-d82721c6-9da1-4c8b-9bbb-a6c8d43ca468",
+        "name": "Poziom głośności",
+        "description": "Ustawiona głośność radia, grafiki dla różnich poziomóœ podpięte, przelicz jakoś głośność z poziomów ustawianych w rda5807 do 9 poziomów dostępnych z grafik",
+        "x": 80,
+        "y": 0,
+        "width": 4,
+        "height": 36,
+        "color": "#1a5fb4",
+        "visibleInEditor": true,
+        "previewVariant": 8,
+        "graphics": [
+          {
+            "id": "graphic-a847f028-88c6-467a-9cad-37196d346ba3",
+            "name": "Volume0",
+            "condition": "",
+            "assetId": "asset-dbd600f9-bb7f-4d14-b91a-555baf3e4cdd"
+          },
+          {
+            "id": "graphic-ccede4d1-56f9-499d-9f81-1ea8ac67ea0f",
+            "name": "Volume1",
+            "condition": "",
+            "assetId": "asset-a3266b99-acf3-4536-ab68-c27e2f14a4ae"
+          },
+          {
+            "id": "graphic-1383e55f-cdab-488c-8ef0-9e36900cf401",
+            "name": "Volume2",
+            "condition": "",
+            "assetId": "asset-914b189d-5755-42a5-bb59-f65e1a22cbd9"
+          },
+          {
+            "id": "graphic-3f4a2cfd-9267-494a-8e28-922ba580f14d",
+            "name": "Volume3",
+            "condition": "",
+            "assetId": "asset-9f7d2b5b-b097-4f64-883b-36d0365f911f"
+          },
+          {
+            "id": "graphic-78065f68-8505-4c8c-a3b2-815662fad2b2",
+            "name": "Volume4",
+            "condition": "",
+            "assetId": "asset-fb1f7970-fcb4-4e00-9f9f-c3fed5476a7f"
+          },
+          {
+            "id": "graphic-8ea2e0a2-3c73-4c08-9421-0ceb80bde4a9",
+            "name": "Volume5",
+            "condition": "",
+            "assetId": "asset-3f29d720-1a1d-411a-bd58-79fd747026f4"
+          },
+          {
+            "id": "graphic-5f3adade-dd5a-4209-bb84-d0df6c975c56",
+            "name": "Volume6",
+            "condition": "",
+            "assetId": "asset-282a6cd1-20f2-4136-aa0d-00941f440d47"
+          },
+          {
+            "id": "graphic-b9b19970-0f83-490e-ae97-f813bd6bbf95",
+            "name": "Volume7",
+            "condition": "",
+            "assetId": "asset-3a4a8994-f7c4-4b25-b8a4-1ed57bd82c14"
+          },
+          {
+            "id": "graphic-54095d1c-dffb-4732-8d87-06417cd0e3fc",
+            "name": "Volume8",
+            "condition": "",
+            "assetId": "asset-a7a4df7f-af65-4dc0-bc7c-8e5477f23d8f"
+          }
+        ]
+      },
+      {
+        "id": "region-a1bbeb4f-77ec-454c-a032-d3b8f56894a5",
+        "name": "Bass boost",
+        "description": "Ikonka bass bost, jeżeli włączone to wyswietl obrazek on, jezeli wylaczone to obrazek off",
+        "x": 28,
+        "y": 0,
+        "width": 15,
+        "height": 4,
+        "color": "#1a5fb4",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": [
+          {
+            "id": "graphic-db329c09-31e1-46f0-89c0-38ab3e346457",
+            "name": "Bass_on",
+            "condition": "",
+            "assetId": "asset-2e79463f-3575-49fe-9a1c-7daef40b9cd5"
+          },
+          {
+            "id": "graphic-4bc3d5cd-e94d-4c03-be47-0a69690e1284",
+            "name": "Bass_off",
+            "condition": "",
+            "assetId": "asset-9fe5b6c5-572c-4c2f-b699-c515e0be167e"
+          }
+        ]
+      },
+      {
+        "id": "region-a3a731c2-329d-4358-8733-53cfaa8c2abd",
+        "name": "Mono/stereo",
+        "description": "Status mono stereo, podpięte dwa obrazy do tego",
+        "x": 46,
+        "y": 0,
+        "width": 13,
+        "height": 4,
+        "color": "#1a5fb4",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": [
+          {
+            "id": "graphic-5efde753-22df-44e3-9a23-6269a67cc886",
+            "name": "Stereo",
+            "condition": "",
+            "assetId": "asset-9cd00946-30bc-441e-87e4-f01d367b1308"
+          },
+          {
+            "id": "graphic-dc75cdfd-055c-49d0-a5f4-5e2246e86549",
+            "name": "Mono",
+            "condition": "",
+            "assetId": "asset-301da296-3ff6-42f2-8790-77111b74e89b"
+          }
+        ]
+      },
+      {
+        "id": "region-b8686a84-9a26-4710-863a-c5a91398b3e4",
+        "name": "Zegar",
+        "description": "Tutaj ma się wyświetlać zegar z RTC. W menu ma być opcja ustawienia zegara. Czcionka 3x4 piksele, format 24h",
+        "x": 62,
+        "y": 0,
+        "width": 18,
+        "height": 5,
+        "color": "#1a5fb4",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-4aff88f0-92b0-4afc-b793-0d150bf3a765",
+        "name": "Nazwa zapisanej stacji",
+        "description": "Nazwa zapisanej w pamięci stacji, czcionka 3x4px, w przypadku nazwy dłuższe niż dostępny obszar, przewijanie tekstu. W przypadku gdy stacja nie jest zapisana na licie napis \"FM\", Wyrównanie do środka jeżeli nie wymaga przewijania.\nostatni wiersz pikseli wolny",
+        "x": 6,
+        "y": 31,
+        "width": 72,
+        "height": 5,
+        "color": "#64b5f6",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-bf8d4c62-c775-4b1c-808d-4eea00967614",
+        "name": "Częstotliwość",
+        "description": "Aktualna częstotliwość FM, w postaci XXX.XXMHz, usuwanie nieznaczących zer, wyśrodkowanie, czcionka wysokości 7px.\nOstatni wiersz pikseli wolny",
+        "x": 6,
+        "y": 36,
+        "width": 72,
+        "height": 8,
+        "color": "#e6d85c",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-ae93a145-1c03-4e75-ab6f-522a34d18ed9",
+        "name": "Signal_logo",
+        "description": "Tutaj kreślona jest ikonka zasięgu. W rda5807 masz możliwość sprawdzenia czy odbierana jest stacja, według tego dopasuj przypiety obrazek",
+        "x": 0,
+        "y": 37,
+        "width": 4,
+        "height": 4,
+        "color": "#ffb84d",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": [
+          {
+            "id": "graphic-a342af0b-1cfa-4973-a96e-50097a133e15",
+            "name": "Station",
+            "condition": "",
+            "assetId": "asset-95483af2-ee9e-4dbf-b24d-dc0a4ff6e4e4"
+          },
+          {
+            "id": "graphic-26dfd663-ebe5-4519-8d5d-57945d547511",
+            "name": "Noise",
+            "condition": "",
+            "assetId": "asset-35250856-750e-4c5a-a763-2a5c0063b801"
+          }
+        ]
+      },
+      {
+        "id": "region-73bc03ea-44b7-4289-b90a-9aba0b50a5be",
+        "name": "Ikona glosnika",
+        "description": "Ikona glosnika jak volume wieksze od zera, ikona mute jakvolume 0 ",
+        "x": 80,
+        "y": 37,
+        "width": 4,
+        "height": 4,
+        "color": "#55d6ff",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": [
+          {
+            "id": "graphic-8b48dbd4-f7a7-4392-9bdf-0a98a6cd09a5",
+            "name": "Speaker",
+            "condition": "",
+            "assetId": "asset-035d09b8-5af1-4f3e-bd23-bb24099f3844"
+          },
+          {
+            "id": "graphic-357b2230-51d3-4aff-9864-e2beca85ebfc",
+            "name": "Mute",
+            "condition": "",
+            "assetId": "asset-a8ca1f91-ed43-49a3-b50e-bca06531ccbb"
+          }
+        ]
+      },
+      {
+        "id": "region-3045e595-aa86-4e08-8d09-4c0ed29890fe",
+        "name": "Logo",
+        "description": "Zmieniane logo z pamieci programu wyświetlana w przypadku braku informacji RDS.",
+        "x": 6,
+        "y": 5,
+        "width": 72,
+        "height": 26,
+        "color": "#ff6f91",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-73b6a1cb-29e0-46d9-af5d-1ad86ed39d98",
+        "name": "Siła sygnału",
+        "description": "czcionka 4x3 px, \nTutaj wartość liczbowa siły sygnały radiowego, wartość od 0 do 99. Sygnał w rejestrach RDS5807 jest chyba w zakresie 0-127, więc przeskaluj to na wartości 0-99.",
+        "x": 0,
+        "y": 44,
+        "width": 8,
+        "height": 4,
+        "color": "#b794f4",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-3fa7cebe-d74c-4e35-a25c-44436bafba69",
+        "name": "Poziom glosnosci",
+        "description": "Tutaj głośność w zakresie dostępnym dla rda5807.czcionka 3x4px",
+        "x": 76,
+        "y": 44,
+        "width": 8,
+        "height": 4,
+        "color": "#7ee081",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-c62147ef-a62b-434b-8c15-9f0514f157ea",
+        "name": "Tryb_przełączania",
+        "description": "Jeden z trzech trybow pracy przelacznika, zmiana zapisanej stacji, zmiana czestotliwosci o odpowiedni krok, tryb seek automatycznego wyszukiwania stajcji",
+        "x": 27,
+        "y": 44,
+        "width": 31,
+        "height": 4,
+        "color": "#ff8a65",
+        "visibleInEditor": true,
+        "previewVariant": 2,
+        "graphics": [
+          {
+            "id": "graphic-72d5e4db-b60d-46fa-8a46-2a5820774dfa",
+            "name": "mode_seek",
+            "condition": "",
+            "assetId": "asset-e64652d6-dd90-4bc4-a6c6-e77d1ed6442c"
+          },
+          {
+            "id": "graphic-01477edd-861d-4219-aa04-0bedcce3d7d8",
+            "name": "mode_freq",
+            "condition": "",
+            "assetId": "asset-0757421a-ec5d-48a8-827f-84c947a3b234"
+          },
+          {
+            "id": "graphic-5c2ce7d5-1c0b-4522-b75a-7045b0710523",
+            "name": "mode_station",
+            "condition": "",
+            "assetId": "asset-a0e0d7e8-b847-4326-8a06-8b60b4e63f6c"
+          }
+        ]
+      },
+      {
+        "id": "region-ccce562c-d42f-42c3-b1de-7c791100026e",
+        "name": "Nazwa stacji PS",
+        "description": "Nazwa stacji PS pobrana z RDS, w przypadku braku RDS puste. Czcionka 3x4px",
+        "x": 6,
+        "y": 5,
+        "width": 32,
+        "height": 5,
+        "color": "#64b5f6",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-e71b6b2b-5043-4661-a414-96c5c2af0b98",
+        "name": "Rodzaj programu PTY",
+        "description": "Rodzaj programu PTY z rds, w przypadku braku rds, puste. Czcionka 3x4px wyrównianie do prawej.\nOpisy do wyswietlania - skrócona wersja do wyświetlenia na wyswietlacuz po lewej względem typu programu po prawej.\nINFO – Wiadomości / Serwisy informacyjne\nPUB lub REPT – Publicystyka / Reportaż\nEDUK – Edukacja\nTEATR – Słuchowiska / Dramat\nKULT – Kultura\nNAUKA – Nauka\nROZR – Rozrywka / Varied\nPOP – Muzyka pop\nROCK – Muzyka rockowa\nLEKKA – Muzyka lekka (Easy listening)\nKLAS – Muzyka klasyczna\nINNA – Inna muzyka\nPOGODA – Pogoda\nGOSP – Gospodarka / Finanse\nDZIECI – Audycje dla dzieci\nSPOŁ – Tematy społeczne\nRELIGIA – Religia\nLIVE – Telefon na żywo (Phone-in)\nPODR – Podróże\nHOBBY – Czas wolny / Pasje\nJAZZ – Muzyka jazzowa\nFOLK – Muzyka folkowa\nHITY – Muzyka dawna (Oldies)\nDOK – Dokument\nTEST – Sygnał testowy\nALARM – Komunikat alarmowy",
+        "x": 46,
+        "y": 5,
+        "width": 32,
+        "height": 5,
+        "color": "#e6d85c",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-bb84f4f5-a122-458b-832b-287c6d8bcfe2",
+        "name": "Radio text",
+        "description": "Radio tekst odebrane z RDS, wyrównane do lewej, czcionka 3x4px",
+        "x": 6,
+        "y": 13,
+        "width": 72,
+        "height": 5,
+        "color": "#ffb84d",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      },
+      {
+        "id": "region-04717589-26ce-4b69-a921-5d6e45076318",
+        "name": "Radio tekst plus",
+        "description": "To samo co radio text, rozszerzone dodatkowo o przewijanie jeżeli tekst się nie mieści, ma się zapętlać przy przewijaniu z przerwą 5 spacji.",
+        "x": 6,
+        "y": 21,
+        "width": 72,
+        "height": 5,
+        "color": "#55d6ff",
+        "visibleInEditor": true,
+        "previewVariant": 0,
+        "graphics": []
+      }
+    ],
+    "bitmap": {
+      "width": 84,
+      "height": 48,
+      "encoding": "1=dark pixel, 0=clear pixel",
+      "rows": [
+        "000000000000000000000000000000000000000000000000000000000000001110111000111011100000",
+        "000000000000000000000000000000000000000000000000000000000000001010101010101010100000",
+        "000000000000000000000000000000000000000000000000000000000000001010101000101010100000",
+        "000000000000000000000000000000000000000000000000000000000000001110111010111011100000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "111011100000000000000000000000000000000000000000000000000000000000000000000001110111",
+        "101010100000000000000000000000000000000000000000000000000000000000000000000001010101",
+        "101010100000000000000000000000000000000000000000000000000000000000000000000001010101",
+        "111011100000000000000000000000000000000000000000000000000000000000000000000001110111"
+      ],
+      "pcd8544PageBytes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        15,
+        9,
+        15,
+        0,
+        15,
+        9,
+        15,
+        0,
+        10,
+        0,
+        15,
+        9,
+        15,
+        0,
+        15,
+        9,
+        15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        240,
+        144,
+        240,
+        0,
+        240,
+        144,
+        240,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        240,
+        144,
+        240,
+        0,
+        240,
+        144,
+        240
+      ]
+    }
+  },
+  "menu": {
+    "title": "MENU",
+    "firstLevelStyle": "list",
+    "fontId": "font-5x7",
+    "visibleRows": 5,
+    "categories": [
+      {
+        "id": "category-41987d13-fd21-46a3-bb54-75b6a4c0d942",
+        "name": "Radio",
+        "description": "Automatyczne strojenie w pełnym zakresie.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-5cc14c89-27eb-412b-a069-59c973b30e19",
+            "name": "Częstotliwość",
+            "description": "Ręczne strojenie odbiornika.",
+            "type": "number",
+            "options": {
+              "min": 50,
+              "max": 115,
+              "step": 0.05,
+              "defaultValue": 106.1,
+              "unit": "MHz"
+            }
+          },
+          {
+            "id": "entry-549497a4-4b8f-4c1e-a2c3-084408d3e5b0",
+            "name": "Zakres rozszerzony",
+            "description": "Odblokowuje częstotliwości poza 50–115 MHz.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "NORMALNY",
+              "onLabel": "ROZSZERZONY",
+              "defaultValue": false
+            }
+          },
+          {
+            "id": "entry-0dac025b-abfc-406f-8a02-eb4fea69989d",
+            "name": "Seek w górę",
+            "description": "Wyszukuje następną stację.",
+            "type": "action",
+            "options": {
+              "confirmation": "Wyszukiwanie w górę"
+            }
+          },
+          {
+            "id": "entry-22e13b6d-4ee7-46bb-b6c1-9a4b4adc7bb6",
+            "name": "Seek w dół",
+            "description": "Wyszukuje poprzednią stację.",
+            "type": "action",
+            "options": {
+              "confirmation": "Wyszukiwanie w dół"
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-4b8d8d31-4b6d-460d-8150-2978773cf60c",
+        "name": "Dźwięk",
+        "description": "Głośność i tor audio.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-c178a763-8909-49af-821c-7707d231de71",
+            "name": "Głośność",
+            "description": "Głośność sprzętowa RDA5807.",
+            "type": "bar",
+            "options": {
+              "min": 0,
+              "max": 15,
+              "step": 1,
+              "defaultValue": 8,
+              "segments": 15,
+              "unit": ""
+            }
+          },
+          {
+            "id": "entry-9af4c034-27f0-4416-8f96-547de6386a0a",
+            "name": "Wyciszenie",
+            "description": "Natychmiastowe wyciszenie toru audio.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "DŹWIĘK",
+              "onLabel": "MUTE",
+              "defaultValue": false
+            }
+          },
+          {
+            "id": "entry-a21ccc1a-7917-4aea-be39-75d003a7391a",
+            "name": "Tryb kanałów",
+            "description": "Wymuszone mono albo automatyczne stereo.",
+            "type": "choice",
+            "options": {
+              "values": [
+                "AUTO STEREO",
+                "MONO"
+              ],
+              "defaultIndex": 0
+            }
+          },
+          {
+            "id": "entry-d7ee3a48-a9f1-44c1-8acd-41fdada75190",
+            "name": "Bass Boost",
+            "description": "Sprzętowe podbicie basu.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "WYL.",
+              "onLabel": "WL.",
+              "defaultValue": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-c7f10d29-ae0e-470f-be5f-51dffabab15e",
+        "name": "Odbiór",
+        "description": "Wyszukiwanie, RSSI, AFC i progi.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-5686de29-deab-4c47-9e61-8e7e8f16d2ce",
+            "name": "Próg seek",
+            "description": "Minimalny poziom dla znalezionej stacji.",
+            "type": "bar",
+            "options": {
+              "min": 0,
+              "max": 15,
+              "step": 1,
+              "defaultValue": 8,
+              "segments": 15,
+              "unit": ""
+            }
+          },
+          {
+            "id": "entry-3c0efc82-f26c-4819-8282-4407efa95c8a",
+            "name": "Uśrednianie RSSI",
+            "description": "Czas wygładzania wskaźnika sygnału.",
+            "type": "choice",
+            "options": {
+              "values": [
+                "0.2 s",
+                "0.5 s",
+                "1.0 s",
+                "2.0 s",
+                "5.0 s"
+              ],
+              "defaultIndex": 2
+            }
+          },
+          {
+            "id": "entry-698d6ae5-9d18-4d70-863f-fb65df81c4ef",
+            "name": "AFC",
+            "description": "Automatyczna korekcja częstotliwości.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "WYL.",
+              "onLabel": "WL.",
+              "defaultValue": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-626cd326-01cd-4483-abf5-f638ff0db48f",
+        "name": "RDS",
+        "description": "Dekoder danych stacji.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-85af7ee1-85cc-4a38-b813-48b40f521ad7",
+            "name": "Dekoder RDS",
+            "description": "Włącza odbiór bloków RDS.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "WYL.",
+              "onLabel": "WL.",
+              "defaultValue": true
+            }
+          },
+          {
+            "id": "entry-f4946a26-d16d-4b34-ace2-71a23f50ce16",
+            "name": "Standard",
+            "description": "Europejski RDS albo amerykański RBDS.",
+            "type": "choice",
+            "options": {
+              "values": [
+                "RDS",
+                "RBDS"
+              ],
+              "defaultIndex": 0
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-394e9509-d7db-428e-a083-2a80b6fa640c",
+        "name": "Sterowanie",
+        "description": "Akcje enkodera i przycisków.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-463d99e2-0d64-4b85-aa92-ccdd9f6cb413",
+            "name": "Ruch enkodera",
+            "description": "Działanie obrotu na ekranie głównym.",
+            "type": "text-cycle",
+            "options": {
+              "values": [
+                "KROK 50 kHz",
+                "KROK 100 kHz",
+                "SEEK",
+                "LISTA STACJI"
+              ],
+              "defaultIndex": 1
+            }
+          },
+          {
+            "id": "entry-234dadc9-cfd1-45a4-ad29-ab06e69be1ba",
+            "name": "Przyciski L/P",
+            "description": "Działanie osobnych przycisków.",
+            "type": "text-cycle",
+            "options": {
+              "values": [
+                "KROK 50 kHz",
+                "KROK 100 kHz",
+                "SEEK",
+                "LISTA STACJI"
+              ],
+              "defaultIndex": 2
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-75718227-5d66-42b5-9dad-0144118aa3a2",
+        "name": "Ekran",
+        "description": "Kontrast, negatyw i podświetlenie.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-dc452442-bf9b-4247-b028-f19150d84c84",
+            "name": "Kontrast",
+            "description": "Napięcie sterujące kontrastem PCD8544.",
+            "type": "bar",
+            "options": {
+              "min": 20,
+              "max": 127,
+              "step": 1,
+              "defaultValue": 56,
+              "segments": 16,
+              "unit": ""
+            }
+          },
+          {
+            "id": "entry-4d32df28-a16d-40d6-a343-49e08eb97a5c",
+            "name": "Negatyw",
+            "description": "Odwraca wszystkie piksele.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "WYL.",
+              "onLabel": "WL.",
+              "defaultValue": false
+            }
+          },
+          {
+            "id": "entry-0cd2125b-7599-4d9b-871f-94df42810f26",
+            "name": "Podświetlenie",
+            "description": "Steruje wyjściem podświetlenia.",
+            "type": "toggle",
+            "options": {
+              "offLabel": "WYL.",
+              "onLabel": "WL.",
+              "defaultValue": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-e98590ae-65af-4e56-93be-1eea01459efc",
+        "name": "Stacje",
+        "description": "Lista zapisanych stacji.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-89b97028-e064-4d55-9cf9-bbaf00abf50c",
+            "name": "Dodaj stację",
+            "description": "Uruchamia kreator nazwy i częstotliwości.",
+            "type": "action",
+            "options": {
+              "confirmation": "Kreator nowej stacji"
+            }
+          },
+          {
+            "id": "entry-697cb547-c12c-47cc-8d44-ff8dfc7157e4",
+            "name": "Zarządzaj listą",
+            "description": "Otwiera listę zapisanych stacji.",
+            "type": "action",
+            "options": {
+              "confirmation": "Lista stacji"
+            }
+          }
+        ]
+      },
+      {
+        "id": "category-47f324ef-20d4-475a-bbcc-412a84475e6c",
+        "name": "System",
+        "description": "Informacje i ustawienia domyślne.",
+        "assetId": "",
+        "entries": [
+          {
+            "id": "entry-debe10b1-d1cb-48c5-81a2-371c0fd5c5d4",
+            "name": "Wersja firmware",
+            "description": "Pole tylko do odczytu.",
+            "type": "info",
+            "options": {
+              "value": "v1.0 / STM32F103"
+            }
+          },
+          {
+            "id": "entry-444a1d4b-fe97-4e69-a7a4-b0e8055f6cec",
+            "name": "Ustawienia domyślne",
+            "description": "Przywraca konfigurację fabryczną.",
+            "type": "action",
+            "options": {
+              "confirmation": "Potwierdź reset"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "asset-95483af2-ee9e-4dbf-b24d-dc0a4ff6e4e4",
+      "name": "Signal_station",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-16bda909-2d9d-45f3-b23d-bc28ed316a7d",
+          "durationMs": 300,
+          "bitmap": {
+            "width": 4,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "1110",
+              "0100",
+              "0100",
+              "0101"
+            ],
+            "pcd8544PageBytes": [
+              1,
+              15,
+              1,
+              8
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-35250856-750e-4c5a-a763-2a5c0063b801",
+      "name": "Signal_noise",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-78162ae2-36a0-4992-97dc-a24c7b15d09a",
+          "durationMs": 300,
+          "bitmap": {
+            "width": 4,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "1110",
+              "0100",
+              "0100",
+              "0100"
+            ],
+            "pcd8544PageBytes": [
+              1,
+              15,
+              1,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-035d09b8-5af1-4f3e-bd23-bb24099f3844",
+      "name": "Speaker",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-db9e4a09-4a6f-46b7-851b-6001d5193d27",
+          "durationMs": 300,
+          "bitmap": {
+            "width": 4,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0010",
+              "0110",
+              "0110",
+              "0010"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              6,
+              15,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-a8ca1f91-ed43-49a3-b50e-bca06531ccbb",
+      "name": "Speaker_muted",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-a4277c9f-2ecb-41f8-8577-a4a2b623ca1a",
+          "durationMs": 300,
+          "bitmap": {
+            "width": 4,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "1010",
+              "0100",
+              "1010",
+              "0000"
+            ],
+            "pcd8544PageBytes": [
+              5,
+              2,
+              5,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-b92d98ab-b6bf-4a91-90bf-2fdf8d010ee5",
+      "name": "RDS_logo",
+      "description": "",
+      "type": "image",
+      "width": 20,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-a8f4d2d4-2b72-437e-ac86-87a2ec8f0113",
+          "durationMs": 300,
+          "bitmap": {
+            "width": 20,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "01100110011101100111",
+              "10011001010101010100",
+              "10011001011001010001",
+              "01100110010101100111"
+            ],
+            "pcd8544PageBytes": [
+              6,
+              9,
+              9,
+              6,
+              6,
+              9,
+              9,
+              6,
+              0,
+              15,
+              5,
+              11,
+              0,
+              15,
+              9,
+              6,
+              0,
+              11,
+              9,
+              13
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-bc22a7a6-8760-490c-a14f-e8d45c5c4ef4",
+      "name": "Signal_lvl_0",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-5419aa84-2637-4ee2-a990-7cd35cee9ae0",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-63d2e195-c50e-4853-947f-f0d384b8d9db",
+      "name": "Signal_lvl_1",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-033d50fa-b58d-46c3-8f80-28184db545c3",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-c3d3b6b8-2a23-44ff-aa91-c0d16f8b3bfe",
+      "name": "Signal_lvl_2",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-9f562c8f-84a2-4db3-bed2-eb7dabc4e6ef",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              120,
+              120,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-548108fa-bc56-499f-a33a-2c333fae6fe1",
+      "name": "Signal_lvl_3",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-b8e0bc6e-2bcb-4999-a87c-58f23e1b38b9",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              192,
+              192,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-ee87e9df-435e-4388-98e1-fcc0b8febcc6",
+      "name": "Signal_lvl_4",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-56d02729-054e-4615-9793-303e517f1cb5",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-3e073ae9-d3ac-4d5b-a525-cacd8befd741",
+      "name": "Signal_lvl_5",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-805c24d0-2415-4897-8935-a1e8b4b88659",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              240,
+              240,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-3de06689-94e1-4ac4-99ec-c6d3a08991e7",
+      "name": "Signal_lvl_6",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-31944b5c-c4b5-49fd-a250-41b97feaa3d9",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "1110",
+              "1110",
+              "1110",
+              "1110",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              128,
+              128,
+              128,
+              0,
+              247,
+              247,
+              7,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-38c350bf-f510-45e0-a252-a8380569a20e",
+      "name": "Signal_lvl_7",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-72ff02a4-cee4-4bf3-812c-6c361e7c5927",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "1111",
+              "1111",
+              "1111",
+              "1111",
+              "0000",
+              "1110",
+              "1110",
+              "1110",
+              "1110",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              188,
+              188,
+              188,
+              60,
+              247,
+              247,
+              7,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-b33a1138-8db2-4080-b487-b45625a6a912",
+      "name": "Signal_lvl_8",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-7767c3b3-97e0-4724-828e-f151c79db177",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "1111",
+              "0000",
+              "1111",
+              "1111",
+              "1111",
+              "1111",
+              "0000",
+              "1110",
+              "1110",
+              "1110",
+              "1110",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1100",
+              "1100",
+              "1100",
+              "1100",
+              "0000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ],
+            "pcd8544PageBytes": [
+              189,
+              189,
+              189,
+              61,
+              247,
+              247,
+              7,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              15,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-dbd600f9-bb7f-4d14-b91a-555baf3e4cdd",
+      "name": "Volume_0",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-2eb0218f-3f4d-4524-ae2b-b974c169a31e",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-a3266b99-acf3-4536-ab68-c27e2f14a4ae",
+      "name": "Volume_1",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-033ab063-39fc-4a1a-8192-2b89834c1dbf",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-914b189d-5755-42a5-bb59-f65e1a22cbd9",
+      "name": "Volume_2",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-a3f5b932-ae4d-4629-a4ea-69d517c03257",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              120,
+              120,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-9f7d2b5b-b097-4f64-883b-36d0365f911f",
+      "name": "Volume_3",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-d845c6e2-f7e5-4bed-acb1-535cba68c687",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              192,
+              192,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-fb1f7970-fcb4-4e00-9f9f-c3fed5476a7f",
+      "name": "Volume_4",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-687a0eb0-f3b1-4300-ae52-c7446e230d9e",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-3f29d720-1a1d-411a-bd58-79fd747026f4",
+      "name": "Volume_5",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-992e4f34-4be3-4621-830d-c56132a63ce0",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              240,
+              240,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-282a6cd1-20f2-4136-aa0d-00941f440d47",
+      "name": "Volume_6",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-92a1d36b-9228-4ded-b372-bb23b3ebf5f6",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0000",
+              "0111",
+              "0111",
+              "0111",
+              "0111",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              128,
+              128,
+              128,
+              0,
+              7,
+              247,
+              247,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-3a4a8994-f7c4-4b25-b8a4-1ed57bd82c14",
+      "name": "Volume_7",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-465dea5e-2031-4cfe-a0fc-484ebf9f5962",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000",
+              "0000",
+              "1111",
+              "1111",
+              "1111",
+              "1111",
+              "0000",
+              "0111",
+              "0111",
+              "0111",
+              "0111",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              60,
+              188,
+              188,
+              188,
+              0,
+              7,
+              247,
+              247,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-a7a4df7f-af65-4dc0-bc7c-8e5477f23d8f",
+      "name": "Volume_8",
+      "description": "",
+      "type": "image",
+      "width": 4,
+      "height": 36,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-1baf02ed-74bd-49f0-8687-fdfec8ecb1c8",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 4,
+            "height": 36,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "1111",
+              "0000",
+              "1111",
+              "1111",
+              "1111",
+              "1111",
+              "0000",
+              "0111",
+              "0111",
+              "0111",
+              "0111",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0011",
+              "0011",
+              "0011",
+              "0011",
+              "0000",
+              "0001",
+              "0001",
+              "0001",
+              "0001"
+            ],
+            "pcd8544PageBytes": [
+              61,
+              189,
+              189,
+              189,
+              0,
+              7,
+              247,
+              247,
+              0,
+              0,
+              222,
+              222,
+              0,
+              0,
+              123,
+              123,
+              0,
+              0,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-9cd00946-30bc-441e-87e4-f01d367b1308",
+      "name": "Stereo",
+      "description": "",
+      "type": "image",
+      "width": 13,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-d4973bf9-db04-49f7-8043-803b6bcafb19",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 13,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0101100011010",
+              "1001110111001",
+              "1001110111001",
+              "0101100011010"
+            ],
+            "pcd8544PageBytes": [
+              6,
+              9,
+              0,
+              15,
+              15,
+              6,
+              0,
+              6,
+              15,
+              15,
+              0,
+              9,
+              6
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-301da296-3ff6-42f2-8790-77111b74e89b",
+      "name": "Mono",
+      "description": "",
+      "type": "image",
+      "width": 13,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-78557c5d-ff48-4db6-a935-68253298ee69",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 13,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000011010000",
+              "0000111001000",
+              "0000111001000",
+              "0000011010000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              6,
+              15,
+              15,
+              0,
+              9,
+              6,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-2e79463f-3575-49fe-9a1c-7daef40b9cd5",
+      "name": "Bass_on",
+      "description": "",
+      "type": "image",
+      "width": 15,
+      "height": 4,
+      "loop": true,
+      "frames": [
+        {
+          "id": "frame-03cdf137-00f7-4e14-91a0-f58834f025dd",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 15,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "100011101110111",
+              "110010101000100",
+              "101011100010001",
+              "111010101110111"
+            ],
+            "pcd8544PageBytes": [
+              15,
+              10,
+              12,
+              0,
+              15,
+              5,
+              15,
+              0,
+              11,
+              9,
+              13,
+              0,
+              11,
+              9,
+              13
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-9fe5b6c5-572c-4c2f-b699-c515e0be167e",
+      "name": "Bass_off",
+      "description": "",
+      "type": "image",
+      "width": 15,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-bc9acec4-cb1b-4269-927f-6291e1d5c884",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 15,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "000000000000000",
+              "000000000000000",
+              "000000000000000",
+              "000000000000000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-a0e0d7e8-b847-4326-8a06-8b60b4e63f6c",
+      "name": "Mode_station",
+      "description": "",
+      "type": "image",
+      "width": 31,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-0c77c1ae-ffcd-4f2f-b172-2a05935b1abf",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 31,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000111011101110111011101110000",
+              "0000100001001010100000101010010",
+              "1110001001001110100000101110111",
+              "0000111001001010111001101010010"
+            ],
+            "pcd8544PageBytes": [
+              4,
+              4,
+              4,
+              0,
+              11,
+              9,
+              13,
+              0,
+              1,
+              15,
+              1,
+              0,
+              15,
+              5,
+              15,
+              0,
+              15,
+              9,
+              9,
+              0,
+              1,
+              9,
+              15,
+              0,
+              15,
+              5,
+              15,
+              0,
+              4,
+              14,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-e64652d6-dd90-4bc4-a6c6-e77d1ed6442c",
+      "name": "Mode_seek",
+      "description": "",
+      "type": "image",
+      "width": 31,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-11f02687-8d93-48a1-9329-21c3d1db88b9",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 31,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000000011101110111010100000000",
+              "0000000010001000100011000100000",
+              "0000111000101100110011001110000",
+              "0000000011101110111010100100000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              4,
+              4,
+              4,
+              0,
+              11,
+              9,
+              13,
+              0,
+              15,
+              13,
+              9,
+              0,
+              15,
+              13,
+              9,
+              0,
+              15,
+              6,
+              9,
+              0,
+              4,
+              14,
+              4,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "asset-0757421a-ec5d-48a8-827f-84c947a3b234",
+      "name": "Mode_freq",
+      "description": "",
+      "type": "image",
+      "width": 31,
+      "height": 4,
+      "loop": false,
+      "frames": [
+        {
+          "id": "frame-c23d0f1c-26b3-438c-8cd5-1e360a410d7e",
+          "durationMs": 1000,
+          "bitmap": {
+            "width": 31,
+            "height": 4,
+            "encoding": "1=dark pixel, 0=clear pixel",
+            "rows": [
+              "0000000011101110111011100000000",
+              "0000000010001010100010100100000",
+              "0000111011001100110011101110000",
+              "0000000010001010111000100100000"
+            ],
+            "pcd8544PageBytes": [
+              0,
+              0,
+              0,
+              0,
+              4,
+              4,
+              4,
+              0,
+              15,
+              5,
+              1,
+              0,
+              15,
+              5,
+              11,
+              0,
+              15,
+              13,
+              9,
+              0,
+              7,
+              5,
+              15,
+              0,
+              4,
+              14,
+              4,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "id": "font-3x4",
+      "template": "3x4",
+      "name": "Nokia Tiny 3×4",
+      "width": 3,
+      "height": 4,
+      "spacing": 1,
+      "chars": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        " ",
+        ".",
+        ":",
+        "-",
+        "/",
+        "_",
+        "+",
+        "<",
+        ">",
+        "?"
+      ],
+      "glyphs": {
+        "0": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "101",
+            "101",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            9,
+            15
+          ]
+        },
+        "1": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "010",
+            "110",
+            "010",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            10,
+            15,
+            8
+          ]
+        },
+        "2": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "110",
+            "001",
+            "010",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            9,
+            13,
+            10
+          ]
+        },
+        "3": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "110",
+            "001",
+            "011",
+            "110"
+          ],
+          "pcd8544PageBytes": [
+            9,
+            13,
+            6
+          ]
+        },
+        "4": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "101",
+            "111",
+            "001"
+          ],
+          "pcd8544PageBytes": [
+            7,
+            4,
+            15
+          ]
+        },
+        "5": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "100",
+            "011",
+            "110"
+          ],
+          "pcd8544PageBytes": [
+            11,
+            13,
+            5
+          ]
+        },
+        "6": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "011",
+            "100",
+            "111",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            14,
+            13,
+            13
+          ]
+        },
+        "7": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "001",
+            "010",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            1,
+            13,
+            3
+          ]
+        },
+        "8": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "101",
+            "111",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            13,
+            15
+          ]
+        },
+        "9": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "111",
+            "001",
+            "110"
+          ],
+          "pcd8544PageBytes": [
+            11,
+            11,
+            7
+          ]
+        },
+        "A": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "010",
+            "101",
+            "111",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            14,
+            5,
+            14
+          ]
+        },
+        "B": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "110",
+            "101",
+            "110",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            13,
+            10
+          ]
+        },
+        "C": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "011",
+            "100",
+            "100",
+            "011"
+          ],
+          "pcd8544PageBytes": [
+            6,
+            9,
+            9
+          ]
+        },
+        "D": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "110",
+            "101",
+            "101",
+            "110"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            9,
+            6
+          ]
+        },
+        "E": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "110",
+            "100",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            11,
+            9
+          ]
+        },
+        "F": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "110",
+            "100",
+            "100"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            3,
+            1
+          ]
+        },
+        "G": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "011",
+            "100",
+            "101",
+            "011"
+          ],
+          "pcd8544PageBytes": [
+            6,
+            9,
+            13
+          ]
+        },
+        "H": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "101",
+            "111",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            4,
+            15
+          ]
+        },
+        "I": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "010",
+            "010",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            9,
+            15,
+            9
+          ]
+        },
+        "J": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "001",
+            "001",
+            "101",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            4,
+            8,
+            7
+          ]
+        },
+        "K": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "110",
+            "110",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            6,
+            9
+          ]
+        },
+        "L": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "100",
+            "100",
+            "100",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            8,
+            8
+          ]
+        },
+        "M": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "111",
+            "111",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            6,
+            15
+          ]
+        },
+        "N": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "111",
+            "111",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            6,
+            15
+          ]
+        },
+        "O": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "101",
+            "101",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            9,
+            15
+          ]
+        },
+        "P": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "101",
+            "111",
+            "100"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            5,
+            7
+          ]
+        },
+        "Q": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "101",
+            "111",
+            "001"
+          ],
+          "pcd8544PageBytes": [
+            7,
+            5,
+            15
+          ]
+        },
+        "R": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "110",
+            "101",
+            "110",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            5,
+            10
+          ]
+        },
+        "S": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "100",
+            "001",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            11,
+            9,
+            13
+          ]
+        },
+        "T": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "010",
+            "010",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            1,
+            15,
+            1
+          ]
+        },
+        "U": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "101",
+            "101",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            8,
+            15
+          ]
+        },
+        "V": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "101",
+            "101",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            7,
+            8,
+            7
+          ]
+        },
+        "W": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "101",
+            "111",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            15,
+            12,
+            15
+          ]
+        },
+        "X": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "010",
+            "010",
+            "101"
+          ],
+          "pcd8544PageBytes": [
+            9,
+            6,
+            9
+          ]
+        },
+        "Y": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "101",
+            "101",
+            "010",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            3,
+            12,
+            3
+          ]
+        },
+        "Z": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "111",
+            "001",
+            "100",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            13,
+            9,
+            11
+          ]
+        },
+        " ": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "000",
+            "000",
+            "000",
+            "000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            0,
+            0
+          ]
+        },
+        ".": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "000",
+            "000",
+            "000",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            8,
+            0
+          ]
+        },
+        ":": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "000",
+            "010",
+            "000",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            10,
+            0
+          ]
+        },
+        "-": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "000",
+            "000",
+            "111",
+            "000"
+          ],
+          "pcd8544PageBytes": [
+            4,
+            4,
+            4
+          ]
+        },
+        "/": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "001",
+            "001",
+            "010",
+            "100"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            4,
+            3
+          ]
+        },
+        "_": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "000",
+            "000",
+            "000",
+            "111"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            8,
+            8
+          ]
+        },
+        "+": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "000",
+            "010",
+            "111",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            4,
+            14,
+            4
+          ]
+        },
+        "<": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "001",
+            "010",
+            "100",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            4,
+            10,
+            1
+          ]
+        },
+        ">": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "100",
+            "010",
+            "001",
+            "010"
+          ],
+          "pcd8544PageBytes": [
+            1,
+            10,
+            4
+          ]
+        },
+        "?": {
+          "width": 3,
+          "height": 4,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "110",
+            "001",
+            "010",
+            "000"
+          ],
+          "pcd8544PageBytes": [
+            1,
+            5,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "id": "font-5x7",
+      "template": "5x7",
+      "name": "Klasyczna 5×7",
+      "width": 5,
+      "height": 7,
+      "spacing": 1,
+      "chars": [
+        " ",
+        "!",
+        "\"",
+        "#",
+        "$",
+        "%",
+        "&",
+        "'",
+        "(",
+        ")",
+        "*",
+        "+",
+        ",",
+        "-",
+        ".",
+        "/",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        ":",
+        ";",
+        "<",
+        "=",
+        ">",
+        "?",
+        "@",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+        "[",
+        "\\",
+        "]",
+        "^",
+        "_",
+        "`",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z",
+        "{",
+        "|",
+        "}",
+        "~",
+        "",
+        "Ą"
+      ],
+      "glyphs": {
+        "0": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10011",
+            "10101",
+            "11001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            62,
+            81,
+            73,
+            69,
+            62
+          ]
+        },
+        "1": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00100",
+            "01100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            66,
+            127,
+            64,
+            0
+          ]
+        },
+        "2": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "00001",
+            "00010",
+            "00100",
+            "01000",
+            "11111"
+          ],
+          "pcd8544PageBytes": [
+            66,
+            97,
+            81,
+            73,
+            70
+          ]
+        },
+        "3": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "00010",
+            "00100",
+            "00010",
+            "00001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            33,
+            65,
+            69,
+            75,
+            49
+          ]
+        },
+        "4": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00010",
+            "00110",
+            "01010",
+            "10010",
+            "11111",
+            "00010",
+            "00010"
+          ],
+          "pcd8544PageBytes": [
+            24,
+            20,
+            18,
+            127,
+            16
+          ]
+        },
+        "5": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "10000",
+            "11110",
+            "00001",
+            "00001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            39,
+            69,
+            69,
+            69,
+            57
+          ]
+        },
+        "6": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00110",
+            "01000",
+            "10000",
+            "11110",
+            "10001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            60,
+            74,
+            73,
+            73,
+            48
+          ]
+        },
+        "7": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "00001",
+            "00010",
+            "00100",
+            "01000",
+            "01000",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            1,
+            113,
+            9,
+            5,
+            3
+          ]
+        },
+        "8": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10001",
+            "01110",
+            "10001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            54,
+            73,
+            73,
+            73,
+            54
+          ]
+        },
+        "9": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10001",
+            "01111",
+            "00001",
+            "00010",
+            "01100"
+          ],
+          "pcd8544PageBytes": [
+            6,
+            73,
+            73,
+            41,
+            30
+          ]
+        },
+        " ": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "!": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00000",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            0,
+            95,
+            0,
+            0
+          ]
+        },
+        "\"": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01010",
+            "01010",
+            "01010",
+            "00000",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            7,
+            0,
+            7,
+            0
+          ]
+        },
+        "#": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01010",
+            "01010",
+            "11111",
+            "01010",
+            "11111",
+            "01010",
+            "01010"
+          ],
+          "pcd8544PageBytes": [
+            20,
+            127,
+            20,
+            127,
+            20
+          ]
+        },
+        "$": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00100",
+            "01111",
+            "10100",
+            "01110",
+            "00101",
+            "11110",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            36,
+            42,
+            127,
+            42,
+            18
+          ]
+        },
+        "%": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11000",
+            "11001",
+            "00010",
+            "00100",
+            "01000",
+            "10011",
+            "00011"
+          ],
+          "pcd8544PageBytes": [
+            35,
+            19,
+            8,
+            100,
+            98
+          ]
+        },
+        "&": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01100",
+            "10010",
+            "10100",
+            "01000",
+            "10101",
+            "10010",
+            "01101"
+          ],
+          "pcd8544PageBytes": [
+            54,
+            73,
+            85,
+            34,
+            80
+          ]
+        },
+        "'": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01100",
+            "00100",
+            "01000",
+            "00000",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            5,
+            3,
+            0,
+            0
+          ]
+        },
+        "(": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00010",
+            "00100",
+            "01000",
+            "01000",
+            "01000",
+            "00100",
+            "00010"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            28,
+            34,
+            65,
+            0
+          ]
+        },
+        ")": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01000",
+            "00100",
+            "00010",
+            "00010",
+            "00010",
+            "00100",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            65,
+            34,
+            28,
+            0
+          ]
+        },
+        "*": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00100",
+            "10101",
+            "01110",
+            "10101",
+            "00100",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            20,
+            8,
+            62,
+            8,
+            20
+          ]
+        },
+        "+": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00100",
+            "00100",
+            "11111",
+            "00100",
+            "00100",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            8,
+            62,
+            8,
+            8
+          ]
+        },
+        ",": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "01100",
+            "00100",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            80,
+            48,
+            0,
+            0
+          ]
+        },
+        "-": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "00000",
+            "11111",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ]
+        },
+        ".": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "01100",
+            "01100"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            96,
+            96,
+            0,
+            0
+          ]
+        },
+        "/": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00001",
+            "00010",
+            "00100",
+            "01000",
+            "10000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            32,
+            16,
+            8,
+            4,
+            2
+          ]
+        },
+        ":": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "01100",
+            "01100",
+            "00000",
+            "01100",
+            "01100",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            54,
+            54,
+            0,
+            0
+          ]
+        },
+        ";": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "01100",
+            "01100",
+            "00000",
+            "01100",
+            "00100",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            86,
+            54,
+            0,
+            0
+          ]
+        },
+        "<": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00010",
+            "00100",
+            "01000",
+            "10000",
+            "01000",
+            "00100",
+            "00010"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            20,
+            34,
+            65,
+            0
+          ]
+        },
+        "=": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "11111",
+            "00000",
+            "11111",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ]
+        },
+        ">": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01000",
+            "00100",
+            "00010",
+            "00001",
+            "00010",
+            "00100",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            65,
+            34,
+            20,
+            8
+          ]
+        },
+        "?": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "00001",
+            "00010",
+            "00100",
+            "00000",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            2,
+            1,
+            81,
+            9,
+            6
+          ]
+        },
+        "@": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "00001",
+            "01101",
+            "10101",
+            "10101",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            50,
+            73,
+            121,
+            65,
+            62
+          ]
+        },
+        "A": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10001",
+            "10001",
+            "11111",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            126,
+            17,
+            17,
+            17,
+            126
+          ]
+        },
+        "B": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11110",
+            "10001",
+            "10001",
+            "11110",
+            "10001",
+            "10001",
+            "11110"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            73,
+            73,
+            73,
+            54
+          ]
+        },
+        "C": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10000",
+            "10000",
+            "10000",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            62,
+            65,
+            65,
+            65,
+            34
+          ]
+        },
+        "D": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11100",
+            "10010",
+            "10001",
+            "10001",
+            "10001",
+            "10010",
+            "11100"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            65,
+            65,
+            34,
+            28
+          ]
+        },
+        "E": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "10000",
+            "10000",
+            "11110",
+            "10000",
+            "10000",
+            "11111"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            73,
+            73,
+            73,
+            65
+          ]
+        },
+        "F": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "10000",
+            "10000",
+            "11110",
+            "10000",
+            "10000",
+            "10000"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            9,
+            9,
+            9,
+            1
+          ]
+        },
+        "G": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10000",
+            "10111",
+            "10001",
+            "10001",
+            "01111"
+          ],
+          "pcd8544PageBytes": [
+            62,
+            65,
+            73,
+            73,
+            122
+          ]
+        },
+        "H": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "10001",
+            "11111",
+            "10001",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            8,
+            8,
+            8,
+            127
+          ]
+        },
+        "I": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            65,
+            127,
+            65,
+            0
+          ]
+        },
+        "J": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00111",
+            "00010",
+            "00010",
+            "00010",
+            "00010",
+            "10010",
+            "01100"
+          ],
+          "pcd8544PageBytes": [
+            32,
+            64,
+            65,
+            63,
+            1
+          ]
+        },
+        "K": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10010",
+            "10100",
+            "11000",
+            "10100",
+            "10010",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            8,
+            20,
+            34,
+            65
+          ]
+        },
+        "L": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10000",
+            "10000",
+            "10000",
+            "10000",
+            "10000",
+            "10000",
+            "11111"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "M": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "11011",
+            "10101",
+            "10101",
+            "10001",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            2,
+            12,
+            2,
+            127
+          ]
+        },
+        "N": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "11001",
+            "10101",
+            "10011",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            4,
+            8,
+            16,
+            127
+          ]
+        },
+        "O": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            62,
+            65,
+            65,
+            65,
+            62
+          ]
+        },
+        "P": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11110",
+            "10001",
+            "10001",
+            "11110",
+            "10000",
+            "10000",
+            "10000"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            9,
+            9,
+            9,
+            6
+          ]
+        },
+        "Q": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "10001",
+            "10001",
+            "10001",
+            "10101",
+            "10010",
+            "01101"
+          ],
+          "pcd8544PageBytes": [
+            62,
+            65,
+            81,
+            33,
+            94
+          ]
+        },
+        "R": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11110",
+            "10001",
+            "10001",
+            "11110",
+            "10100",
+            "10010",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            9,
+            25,
+            41,
+            70
+          ]
+        },
+        "S": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01111",
+            "10000",
+            "10000",
+            "01110",
+            "00001",
+            "00001",
+            "11110"
+          ],
+          "pcd8544PageBytes": [
+            70,
+            73,
+            73,
+            73,
+            49
+          ]
+        },
+        "T": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            1,
+            1,
+            127,
+            1,
+            1
+          ]
+        },
+        "U": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            63,
+            64,
+            64,
+            64,
+            63
+          ]
+        },
+        "V": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "10001",
+            "01010",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            31,
+            32,
+            64,
+            32,
+            31
+          ]
+        },
+        "W": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "10001",
+            "10101",
+            "10101",
+            "10101",
+            "01010"
+          ],
+          "pcd8544PageBytes": [
+            63,
+            64,
+            56,
+            64,
+            63
+          ]
+        },
+        "X": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "01010",
+            "00100",
+            "01010",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            99,
+            20,
+            8,
+            20,
+            99
+          ]
+        },
+        "Y": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10001",
+            "10001",
+            "10001",
+            "01010",
+            "00100",
+            "00100",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            7,
+            8,
+            112,
+            8,
+            7
+          ]
+        },
+        "Z": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "11111",
+            "00001",
+            "00010",
+            "00100",
+            "01000",
+            "10000",
+            "11111"
+          ],
+          "pcd8544PageBytes": [
+            97,
+            81,
+            73,
+            69,
+            67
+          ]
+        },
+        "[": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "01000",
+            "01000",
+            "01000",
+            "01000",
+            "01000",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            127,
+            65,
+            65,
+            0
+          ]
+        },
+        "\\": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "10000",
+            "01000",
+            "00100",
+            "00010",
+            "00001",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            2,
+            4,
+            8,
+            16,
+            32
+          ]
+        },
+        "]": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01110",
+            "00010",
+            "00010",
+            "00010",
+            "00010",
+            "00010",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            65,
+            65,
+            127,
+            0
+          ]
+        },
+        "^": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00100",
+            "01010",
+            "10001",
+            "00000",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            4,
+            2,
+            1,
+            2,
+            4
+          ]
+        },
+        "_": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "11111"
+          ],
+          "pcd8544PageBytes": [
+            64,
+            64,
+            64,
+            64,
+            64
+          ]
+        },
+        "`": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01000",
+            "00100",
+            "00010",
+            "00000",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            1,
+            2,
+            4,
+            0
+          ]
+        },
+        "a": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01110",
+            "00001",
+            "01111",
+            "10001",
+            "01111"
+          ],
+          "pcd8544PageBytes": [
+            32,
+            84,
+            84,
+            84,
+            120
+          ]
+        },
+        "b": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10000",
+            "10000",
+            "10110",
+            "11001",
+            "10001",
+            "10001",
+            "11110"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            72,
+            68,
+            68,
+            56
+          ]
+        },
+        "c": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01110",
+            "10000",
+            "10000",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            56,
+            68,
+            68,
+            68,
+            32
+          ]
+        },
+        "d": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00001",
+            "00001",
+            "01101",
+            "10011",
+            "10001",
+            "10001",
+            "01111"
+          ],
+          "pcd8544PageBytes": [
+            56,
+            68,
+            68,
+            72,
+            127
+          ]
+        },
+        "e": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01110",
+            "10001",
+            "11111",
+            "10000",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            56,
+            84,
+            84,
+            84,
+            24
+          ]
+        },
+        "f": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00110",
+            "01001",
+            "01000",
+            "11100",
+            "01000",
+            "01000",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            126,
+            9,
+            1,
+            2
+          ]
+        },
+        "g": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "01111",
+            "10001",
+            "10001",
+            "01111",
+            "00001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            12,
+            82,
+            82,
+            82,
+            62
+          ]
+        },
+        "h": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10000",
+            "10000",
+            "10110",
+            "11001",
+            "10001",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            8,
+            4,
+            4,
+            120
+          ]
+        },
+        "i": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00100",
+            "00000",
+            "01100",
+            "00100",
+            "00100",
+            "00100",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            68,
+            125,
+            64,
+            0
+          ]
+        },
+        "j": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00010",
+            "00000",
+            "00110",
+            "00010",
+            "00010",
+            "10010",
+            "01100"
+          ],
+          "pcd8544PageBytes": [
+            32,
+            64,
+            68,
+            61,
+            0
+          ]
+        },
+        "k": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "10000",
+            "10000",
+            "10010",
+            "10100",
+            "11000",
+            "10100",
+            "10010"
+          ],
+          "pcd8544PageBytes": [
+            127,
+            16,
+            40,
+            68,
+            0
+          ]
+        },
+        "l": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            65,
+            127,
+            64,
+            0
+          ]
+        },
+        "m": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "11010",
+            "10101",
+            "10101",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            124,
+            4,
+            24,
+            4,
+            120
+          ]
+        },
+        "n": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10110",
+            "11001",
+            "10001",
+            "10001",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            124,
+            8,
+            4,
+            4,
+            120
+          ]
+        },
+        "o": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01110",
+            "10001",
+            "10001",
+            "10001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            56,
+            68,
+            68,
+            68,
+            56
+          ]
+        },
+        "p": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "11110",
+            "10001",
+            "11110",
+            "10000",
+            "10000"
+          ],
+          "pcd8544PageBytes": [
+            124,
+            20,
+            20,
+            20,
+            8
+          ]
+        },
+        "q": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01101",
+            "10011",
+            "01111",
+            "00001",
+            "00001"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            20,
+            20,
+            24,
+            124
+          ]
+        },
+        "r": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10110",
+            "11001",
+            "10000",
+            "10000",
+            "10000"
+          ],
+          "pcd8544PageBytes": [
+            124,
+            8,
+            4,
+            4,
+            8
+          ]
+        },
+        "s": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01110",
+            "10000",
+            "01110",
+            "00001",
+            "11110"
+          ],
+          "pcd8544PageBytes": [
+            72,
+            84,
+            84,
+            84,
+            32
+          ]
+        },
+        "t": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01000",
+            "01000",
+            "11100",
+            "01000",
+            "01000",
+            "01001",
+            "00110"
+          ],
+          "pcd8544PageBytes": [
+            4,
+            63,
+            68,
+            64,
+            32
+          ]
+        },
+        "u": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10001",
+            "10001",
+            "10001",
+            "10011",
+            "01101"
+          ],
+          "pcd8544PageBytes": [
+            60,
+            64,
+            64,
+            32,
+            124
+          ]
+        },
+        "v": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10001",
+            "10001",
+            "10001",
+            "01010",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            28,
+            32,
+            64,
+            32,
+            28
+          ]
+        },
+        "w": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10001",
+            "10001",
+            "10101",
+            "10101",
+            "01010"
+          ],
+          "pcd8544PageBytes": [
+            60,
+            64,
+            48,
+            64,
+            60
+          ]
+        },
+        "x": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10001",
+            "01010",
+            "00100",
+            "01010",
+            "10001"
+          ],
+          "pcd8544PageBytes": [
+            68,
+            40,
+            16,
+            40,
+            68
+          ]
+        },
+        "y": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "10001",
+            "10001",
+            "01111",
+            "00001",
+            "01110"
+          ],
+          "pcd8544PageBytes": [
+            12,
+            80,
+            80,
+            80,
+            60
+          ]
+        },
+        "z": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "11111",
+            "00010",
+            "00100",
+            "01000",
+            "11111"
+          ],
+          "pcd8544PageBytes": [
+            68,
+            100,
+            84,
+            76,
+            68
+          ]
+        },
+        "{": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00010",
+            "00100",
+            "00100",
+            "01000",
+            "00100",
+            "00100",
+            "00010"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            8,
+            54,
+            65,
+            0
+          ]
+        },
+        "|": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100",
+            "00100"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            0,
+            127,
+            0,
+            0
+          ]
+        },
+        "}": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "01000",
+            "00100",
+            "00100",
+            "00010",
+            "00100",
+            "00100",
+            "01000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            65,
+            54,
+            8,
+            0
+          ]
+        },
+        "~": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "01000",
+            "10101",
+            "00010",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            8,
+            4,
+            8,
+            16,
+            8
+          ]
+        },
+        "": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00110",
+            "01001",
+            "01001",
+            "00110",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            6,
+            9,
+            9,
+            6
+          ]
+        },
+        "Ą": {
+          "width": 5,
+          "height": 7,
+          "encoding": "1=dark pixel, 0=clear pixel",
+          "rows": [
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000",
+            "00000"
+          ],
+          "pcd8544PageBytes": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -60,6 +60,12 @@ static void changed(radio_app_t *app, uint32_t now_ms, bool tune,
   app->settings_dirty = true;
   app->last_change_ms = now_ms;
   ++app->revision;
+  if (tune) {
+    app->averaged_rssi_valid = false;
+    reset_rssi_average(app, now_ms);
+    app->radio.status.rds_synchronized = false;
+    app->radio.status.station_valid = false;
+  }
   if (!app->radio_available || !update_radio) return;
   if (tune) rda5807_tune(&app->radio, &app->settings);
   else rda5807_apply_settings(&app->radio, &app->settings);
@@ -466,8 +472,14 @@ void radio_app_menu_adjust(radio_app_t *app, radio_menu_item_t item,
       s->spacing = wrap_u8((int32_t)s->spacing + delta, 4U);
       tune = true;
       break;
-    case RADIO_MENU_RDS: s->rds_enabled = !s->rds_enabled; break;
-    case RADIO_MENU_RBDS: s->rbds_enabled = !s->rbds_enabled; break;
+    case RADIO_MENU_RDS:
+      s->rds_enabled = !s->rds_enabled;
+      rds_decoder_reset_station(&app->rds);
+      break;
+    case RADIO_MENU_RBDS:
+      s->rbds_enabled = !s->rbds_enabled;
+      rds_decoder_reset_station(&app->rds);
+      break;
     case RADIO_MENU_DEEMPHASIS: s->deemphasis_50us = !s->deemphasis_50us; break;
     case RADIO_MENU_SEEK_LIMIT: s->seek_stop_at_band = !s->seek_stop_at_band; break;
     case RADIO_MENU_SEEK_ALGORITHM: s->seek_mode = s->seek_mode == RADIO_SEEK_RSSI ? RADIO_SEEK_SNR : RADIO_SEEK_RSSI; break;
@@ -483,6 +495,7 @@ void radio_app_menu_adjust(radio_app_t *app, radio_menu_item_t item,
       }
       s->rssi_average_ms = (uint16_t)value;
       reset_rssi_average(app, now_ms);
+      update_radio = false;
       break;
     }
     case RADIO_MENU_OLD_SEEK_THRESHOLD: s->old_seek_threshold = clamp_u8((int32_t)s->old_seek_threshold + delta, 63U); break;

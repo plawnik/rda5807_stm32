@@ -1,4 +1,5 @@
 #include "app_config.h"
+#include "lcd_layout.h"
 
 #include <string.h>
 
@@ -33,6 +34,7 @@ void radio_settings_defaults(radio_settings_t *settings) {
   settings->encoder_action = RADIO_CONTROL_TUNE_100_KHZ;
   settings->buttons_action = RADIO_CONTROL_SEEK;
   settings->reserved_input_mode = 0U;
+  lcd_layout_apply_defaults(settings);
 }
 
 const char *radio_control_action_name(uint8_t action) {

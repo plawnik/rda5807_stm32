@@ -7,6 +7,7 @@
 #define RADIO_CLOCK_EPOCH_MJD 51544UL /* 2000-01-01 */
 #define RADIO_CLOCK_BACKUP_MAGIC 0x5243U /* "RC" */
 #define RADIO_CLOCK_VALID_MAGIC  0x4354U /* "CT" */
+#define RADIO_CLOCK_MANUAL_MAGIC 0x4D41U /* "MA" */
 #define RADIO_CLOCK_WAIT_LIMIT 1000000UL
 #define RADIO_CLOCK_RESYNC_TOLERANCE_SECONDS 90UL
 
@@ -72,6 +73,7 @@ bool radio_clock_init(void) {
     if (!wait_for_rtoff()) return false;
     BKP->DR1 = RADIO_CLOCK_BACKUP_MAGIC;
     BKP->DR2 = 0U;
+    BKP->DR3 = 0U;
   } else {
     RCC->BDCR |= RCC_BDCR_RTCEN;
     if (!synchronize_registers()) return false;
@@ -87,7 +89,8 @@ void radio_clock_sync_from_rds(const rds_decoder_t *rds) {
   uint32_t difference;
   uint32_t ct_key;
 
-  if (!clock_ready || rds == NULL || !rds->clock_valid ||
+  if (!clock_ready || !radio_clock_rds_sync_enabled() ||
+      rds == NULL || !rds->clock_valid ||
       rds->modified_julian_day < RADIO_CLOCK_EPOCH_MJD) {
     return;
   }
@@ -146,5 +149,26 @@ bool radio_clock_read(radio_clock_time_t *time) {
   time->hour = (uint8_t)(day_seconds / 3600UL);
   time->minute = (uint8_t)((day_seconds % 3600UL) / 60UL);
   time->second = (uint8_t)(day_seconds % 60UL);
+  return true;
+}
+
+bool radio_clock_rds_sync_enabled(void) {
+  return !clock_ready || (BKP->DR3 & 0xFFFFU) != RADIO_CLOCK_MANUAL_MAGIC;
+}
+
+void radio_clock_set_rds_sync(bool enabled) {
+  if (!clock_ready) return;
+  BKP->DR3 = enabled ? 0U : RADIO_CLOCK_MANUAL_MAGIC;
+  last_ct_key = UINT32_MAX;
+}
+
+bool radio_clock_set(uint8_t hour, uint8_t minute) {
+  uint32_t day;
+  if (!clock_ready || hour > 23U || minute > 59U) return false;
+  day = read_counter() / 86400UL;
+  if (!write_counter(day * 86400UL + (uint32_t)hour * 3600UL +
+                     (uint32_t)minute * 60UL)) return false;
+  BKP->DR2 = RADIO_CLOCK_VALID_MAGIC;
+  radio_clock_set_rds_sync(false);
   return true;
 }

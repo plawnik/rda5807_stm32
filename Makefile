@@ -10,6 +10,7 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 SIZE := $(CROSS_COMPILE)size
 HOST_CC ?= gcc
 NODE ?= node
+PYTHON ?= python3
 
 MCU_FLAGS := -mcpu=cortex-m3 -mthumb
 DEFINES := -DUSE_HAL_DRIVER -DSTM32F103xB
@@ -51,6 +52,7 @@ DEPS := $(OBJECTS:.o=.d)
 
 HOST_TEST_SOURCES := tests/test_main.c \
 	f103radio/Core/Src/app_config.c \
+	f103radio/Core/Src/lcd_layout.c \
 	f103radio/Core/Src/input_policy.c \
 	f103radio/Core/Src/rds_decoder.c
 HOST_TEST := $(TEST_DIR)/test_runner
@@ -58,14 +60,27 @@ HOST_TERMINAL_TEST_SOURCES := tests/test_terminal_ui.c \
 	f103radio/Core/Src/terminal_ui.c \
 	f103radio/Core/Src/uart_debug.c \
 	f103radio/Core/Src/app_config.c \
+	f103radio/Core/Src/lcd_layout.c \
 	f103radio/Core/Src/rds_decoder.c
 HOST_TERMINAL_TEST := $(TEST_DIR)/test_terminal_ui
+HOST_LCD_TEST_SOURCES := tests/test_lcd_ui.c \
+	f103radio/Core/Src/lcd_ui.c f103radio/Core/Src/lcd_home.c \
+	f103radio/Core/Src/lcd_layout.c f103radio/Core/Src/pcd8544.c \
+	f103radio/Core/Src/radio_app.c f103radio/Core/Src/app_config.c \
+	f103radio/Core/Src/rds_decoder.c f103radio/Core/Src/settings_store.c
+HOST_LCD_TEST := $(TEST_DIR)/test_lcd_ui
 
-.PHONY: all firmware test ci clean
+.PHONY: all firmware test ci clean layout check-layout
 
 all: firmware
 
-firmware: $(FIRMWARE_DIR)/$(TARGET).elf $(FIRMWARE_DIR)/$(TARGET).hex $(FIRMWARE_DIR)/$(TARGET).bin
+layout:
+	$(PYTHON) tools/generate_lcd_layout.py
+
+check-layout:
+	$(PYTHON) tools/generate_lcd_layout.py --check
+
+firmware: check-layout $(FIRMWARE_DIR)/$(TARGET).elf $(FIRMWARE_DIR)/$(TARGET).hex $(FIRMWARE_DIR)/$(TARGET).bin
 	@$(SIZE) $(FIRMWARE_DIR)/$(TARGET).elf
 
 $(FIRMWARE_DIR)/$(TARGET).elf: $(OBJECTS)
@@ -86,21 +101,30 @@ $(FIRMWARE_DIR)/%.o: %.s
 	@mkdir -p $(@D)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-test: $(HOST_TEST) $(HOST_TERMINAL_TEST)
+test: check-layout $(HOST_TEST) $(HOST_TERMINAL_TEST) $(HOST_LCD_TEST)
 	$(HOST_TEST)
 	$(HOST_TERMINAL_TEST)
+	$(HOST_LCD_TEST)
+	$(PYTHON) tests/test_lcd_pixels.py
 	$(NODE) tests/test_lcd_layout_editor.js
 
-$(HOST_TEST): $(HOST_TEST_SOURCES)
+$(HOST_TEST): $(HOST_TEST_SOURCES) $(wildcard f103radio/Core/Inc/*.h)
 	@mkdir -p $(@D)
 	$(HOST_CC) -std=gnu11 -O2 -g -Wall -Wextra -Werror \
 		-If103radio/Core/Inc $(HOST_TEST_SOURCES) -o $@
 
-$(HOST_TERMINAL_TEST): $(HOST_TERMINAL_TEST_SOURCES)
+$(HOST_TERMINAL_TEST): $(HOST_TERMINAL_TEST_SOURCES) $(wildcard f103radio/Core/Inc/*.h)
 	@mkdir -p $(@D)
 	$(HOST_CC) -std=gnu11 -O2 -g -Wall -Wextra -Werror \
 		-Wno-int-to-pointer-cast $(DEFINES) $(INCLUDES) \
 		$(HOST_TERMINAL_TEST_SOURCES) -o $@
+
+$(HOST_LCD_TEST): $(HOST_LCD_TEST_SOURCES) $(wildcard f103radio/Core/Inc/*.h)
+	@mkdir -p $(@D)
+	$(HOST_CC) -std=gnu11 -O2 -g -Wall -Wextra -Werror \
+		-Wno-unused-parameter -Wno-int-to-pointer-cast \
+		-ffunction-sections -fdata-sections -Wl,--gc-sections $(DEFINES) $(INCLUDES) \
+		$(HOST_LCD_TEST_SOURCES) -o $@
 
 ci: test firmware
 
